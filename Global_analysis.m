@@ -13,7 +13,7 @@ sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';
 %make a specific selection of cohort
 sbj_names = sbj_names_all(1:36);%China
 sbj_names = sbj_names_all(37:end);%Stanford
-sbj_names = sbj_names_all([end-4,end]);%all
+sbj_names = sbj_names_all([end-4,end]);%all  d
 
 
 % define the the abbreviations of kinds of brian structures
