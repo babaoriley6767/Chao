@@ -32,7 +32,8 @@ inclusion = 'any_activation';
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-load('cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, then this need to update,go to 'Creat_cell_of_tables.mat'
+load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+%then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
 %Creat another table with rows of specific cohorts and column of specific anatomical
 %structures

@@ -13,7 +13,7 @@ sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';
 %make a specific selection of cohort
 sbj_names = sbj_names_all(1:36);%China
 sbj_names = sbj_names_all(37:end);%Stanford
-sbj_names = sbj_names_all([end-4,end]);%all
+sbj_names = sbj_names_all([end-4,end]);%allA
 
 
 % define the the abbreviations of kinds of brian structures
@@ -66,6 +66,7 @@ for i = 1:length(sbj_names)
         sbj_name_channame{j} = [sbj_names{i},'-',T{i}.glv_channame{j}];
     end
     T{i}.sbj_name_channame = sbj_name_channame;
+    % add MNI coordinate from Aaron's codes
 end
 %Creat another table with rows of specific cohorts and column of specific anatomical
 %structures
@@ -260,7 +261,7 @@ if plot_params.clust_per
     data_black = permute(data_black,[3 2 1]);
     data_white = stats_data{3}(:,indx_per);
     data_white = permute(data_white,[3 2 1]);
-    
+    rng('default')
     
     [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_black,[]);
     
@@ -343,8 +344,18 @@ xlabel('Time(S)')
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
 title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+%% anova and post hoc
 
+data_asian = mean(stats_data{1}(:,indx_per),2);
+data_black = mean(stats_data{2}(:,indx_per),2);
+data_white = mean(stats_data{2}(:,indx_per),3);
+data = [data_asian;data_black;data_white];
+group = 
 %cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+[p1,tbl1,stats1] = anova1(hfb{i},race{i});
+std1 = [std(hfb{i}(strcmp(race{i},'asian'))),std(hfb{i}(strcmp(race{i},'black'))),std(hfb{i}(strcmp(race{i},'white'))) ]
+m1 = multcompare(stats1,'ctype','lsd')
+
 
 %% stats
 load('cdcol.mat')
@@ -410,7 +421,7 @@ if isempty(side)||strcmp(side,'none')
             idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
             idx = idx1 & idx2;
             coords_in_T = [T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3];
-            coords_in_T = [T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3]
+%             coords_in_T = [T{i}.fsaverageINF_coord_1 T{i}.fsaverageINF_coord_2 T{i}.fsaverageINF_coord_3];
             coords_in_T = coords_in_T(idx,:);
             LvsR_in_T = T{i}.LvsR(idx,:);
             channame_in_T = T{i}.sbj_name_channame(idx,:);
@@ -497,8 +508,8 @@ end
 cfg=[];
 cfg.view='rm';
 cfg.elecSize=12;
-cfg.surfType='inflated';    
-cfg.opaqueness=1;
+cfg.surfType='pial';    
+cfg.opaqueness=0.2;
 cfg.ignoreDepthElec='n';
 cfg.elecCoord=[coords.MNI_coord coords.isleft];
 cfg.elecNames=coords.channame;

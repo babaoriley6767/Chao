@@ -11,9 +11,11 @@ sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';
     ;'S17_116_AA';'S17_118_TW';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT';'S19_145_PC'};
 
 %make a specific selection of cohort
-sbj_names = sbj_names_all(1:36);%China
-sbj_names = sbj_names_all(37:end);%Stanford
-sbj_names = sbj_names_all([end-4,end]);%allA
+indxcohort = 1:36;%China
+% indxcohort = [37:44];%Stanfordc
+% indxcohort = [1:44];%2 Centers
+
+sbj_names = sbj_names_all(indxcohort);%China
 
 
 % define the the abbreviations of kinds of brian structures
@@ -57,17 +59,10 @@ disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-T = cell(size(sbj_names,1), 1);
-for i = 1:length(sbj_names)
-    %cd(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/' sbj_names{i}])%plz adjust accordingly to your ecosystem
-    T{i} = readtable(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/' sbj_names{i} '/' sbj_names{i} '_stats.xlsx']);
-    sbj_name_channame = cell(size(T{i},1),1);
-    for j = 1:size(T{i},1)
-        sbj_name_channame{j} = [sbj_names{i},'-',T{i}.glv_channame{j}];
-    end
-    T{i}.sbj_name_channame = sbj_name_channame;
-    % add MNI coordinate from Aaron's codes
-end
+load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+%then this need to update,go to 'Creat_cell_of_tables.mat'
+T = T(indxcohort,1);
+
 %Creat another table with rows of specific cohorts and column of specific anatomical
 %structures
 sz = [size(sbj_names,1) size(anat,2)];
@@ -261,7 +256,7 @@ if plot_params.clust_per
     data_black = permute(data_black,[3 2 1]);
     data_white = stats_data{3}(:,indx_per);
     data_white = permute(data_white,[3 2 1]);
-    
+    rng('default')
     
     [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_black,[]);
     
@@ -344,8 +339,21 @@ xlabel('Time(S)')
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
 title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+%% anova and post hoc
 
+data_asian = mean(stats_data{1}(:,indx_per),2);
+data_black = mean(stats_data{2}(:,indx_per),2);
+data_white = mean(stats_data{2}(:,indx_per),2);
+data_anova = [data_asian;data_black;data_white];
+group_asian = repmat({'asian'},size(data_asian,1),1);
+group_black = repmat({'black'},size(data_black,1),1);
+group_white = repmat({'white'},size(data_white,1),1);
+group = [group_asian;group_black;group_white];
 %cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+[p1,tbl1,stats1] = anova1(data_anova,group);
+std1 = [std(data_asian),std(data_black ),std(data_white)];
+m1 = multcompare(stats1,'ctype','tukey-kramer')
+
 
 %% stats
 load('cdcol.mat')
