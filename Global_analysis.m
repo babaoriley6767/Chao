@@ -13,7 +13,7 @@ sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';
 %make a specific selection of cohort
 sbj_names = sbj_names_all(1:36);%China
 sbj_names = sbj_names_all(37:end);%Stanford
-sbj_names = sbj_names_all([end-4,end]);%all
+sbj_names = sbj_names_all([end-4,end]);%allA
 
 
 % define the the abbreviations of kinds of brian structures
@@ -66,6 +66,7 @@ for i = 1:length(sbj_names)
         sbj_name_channame{j} = [sbj_names{i},'-',T{i}.glv_channame{j}];
     end
     T{i}.sbj_name_channame = sbj_name_channame;
+    % add MNI coordinate from Aaron's codes
 end
 %Creat another table with rows of specific cohorts and column of specific anatomical
 %structures
@@ -410,6 +411,7 @@ if isempty(side)||strcmp(side,'none')
             idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
             idx = idx1 & idx2;
             coords_in_T = [T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3];
+%             coords_in_T = [T{i}.fsaverageINF_coord_1 T{i}.fsaverageINF_coord_2 T{i}.fsaverageINF_coord_3];
             coords_in_T = coords_in_T(idx,:);
             LvsR_in_T = T{i}.LvsR(idx,:);
             channame_in_T = T{i}.sbj_name_channame(idx,:);
@@ -494,10 +496,10 @@ for i = 1:size(coords.channame)
 end
 
 cfg=[];
-cfg.view='r';
+cfg.view='rm';
 cfg.elecSize=12;
-cfg.surfType='inflated';    
-cfg.opaqueness=1;
+cfg.surfType='pial';    
+cfg.opaqueness=0.2;
 cfg.ignoreDepthElec='n';
 cfg.elecCoord=[coords.MNI_coord coords.isleft];
 cfg.elecNames=coords.channame;

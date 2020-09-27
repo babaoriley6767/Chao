@@ -11,7 +11,11 @@ sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';
     ;'S17_116_AA';'S17_118_TW';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT';'S19_145_PC'};
 
 %make a specific selection of cohort
-sbj_names = sbj_names_all(1:36);%China
+indxcohort = [1:36];%China
+% indxcohort = [37:44];%Stanfordc
+% indxcohort = [1:44];%2 Centers
+
+sbj_names = sbj_names_all(indxcohort);%China
 
 
 %make a specific selection of anatomical structures
@@ -28,22 +32,15 @@ inclusion = 'any_activation';
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-T = cell(size(sbj_names,1), 1);
-for i = 1:length(sbj_names)
-    %cd(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/' sbj_names{i}])%plz adjust accordingly to your ecosystem
-    T{i} = readtable(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/' sbj_names{i} '/' sbj_names{i} '_stats.xlsx']);
-    sbj_name_channame = cell(size(T{i},1),1);
-    for j = 1:size(T{i},1)
-        sbj_name_channame{j} = [sbj_names{i},'-',T{i}.glv_channame{j}];
-    end
-    T{i}.sbj_name_channame = sbj_name_channame;
-end
+load('cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, then this need to update,go to 'Creat_cell_of_tables.mat'
+T = T(indxcohort,:);
 %Creat another table with rows of specific cohorts and column of specific anatomical
 %structures
 sz = [size(sbj_names,1) size(anat,2)];
 varTypes = cell(1,size(anat,2));
 varTypes(:) = {'cell'};
 T2 = table('Size',sz,'VariableTypes',varTypes,'VariableNames',anat,'RowNames',sbj_names);
+
 %put the glv_index into each space of the table as a vector
 if strcmp(inclusion,'any_activation_without_group_diff')
     for i = 1:length(sbj_names)
@@ -449,7 +446,7 @@ elseif strcmp(anat_name,'ACC MCC')
 elseif strcmp(anat_name, 'IFS IFG')
     group_diff_elecs = {'C18_37-E7','C18_37-E8','C18_37-E9','C18_37-F6','C18_37-F7','C18_37-F8','C18_37-F9','C18_37-G7','C18_37-G8','C19_53-X10'};
 elseif strcmp(anat_name,'SFS SFG')
-    group_diff_elecs = {'C18_30-D6',};
+    group_diff_elecs = {'C18_30-D6','C18_41-A7','C18_41-D5','C18_41-D6','C18_41-D7','C19_53-L4','C19_53-L5'};
 else
 end
 
@@ -472,7 +469,7 @@ end
 end
 
 cfg=[];
-cfg.view='rm';
+cfg.view='r';
 cfg.elecSize=12;
 cfg.surfType='inflated';    
 cfg.opaqueness=1;
