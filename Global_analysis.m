@@ -8,7 +8,7 @@ addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_preproc-master/'))
 sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';'C18_27';'C18_28';'C18_29';'C18_30'...
     ;'C18_31';'C18_32';'C18_33';'C18_34';'C18_35';'C18_37';'C18_38';'C18_39';'C18_40';'C18_41';'C18_42';'C18_43';'C18_44'...
     ;'C18_45';'C18_46';'C18_47';'C18_49';'C19_50';'C19_51';'C19_52';'C19_53';'C19_55';'C19_58';'C19_60';'C19_62';'S17_114_EB'...
-    ;'S17_116_AA';'S17_118_TW';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT';'S19_145_PC'};
+    ;'S17_116_AA';'S17_118_TW';'S19_145_PC';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT'};
 
 %make a specific selection of cohort
 indxcohort = 1:36;%China
@@ -28,7 +28,7 @@ anat = {'INSULA'};anat_name = 'INSULA';
 anat = {'ACC','MCC'};anat_name = 'ACC MCC';
 anat = {'ACC'};anat_name = 'ACC';
 anat = {'MCC'};anat_name = 'MCC';
-anat = {'FGX'};anat_name = 'FG';
+anat = {'FG'};anat_name = 'FG';
 anat = {'FG','OTS','CS'};anat_name = 'FG OTS CS';
 anat = {'IFS','IFG'};anat_name = 'IFS IFG';%
 anat = {'SFS','SFG'};anat_name = 'SFS SFG';
@@ -118,7 +118,7 @@ T3(loc,:)=[];
 project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT'
 plot_params = genPlotParams(project_name,'timecourse');
 plot_params.single_trial_replot = true;
-plot_params.single_trial_thr = 20;%the threshold of HFB it could be like 10 15 20 ...
+plot_params.single_trial_thr = 40;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
 plot_params.single_trial = false;
 plot_params.clust_per = true;% clusterd based permuation
@@ -129,8 +129,9 @@ if strcmp(project_name,'Grad_CPT')
     load cdcol.mat
     plot_params.col = [cdcol.carmine;cdcol.ultramarine];
 elseif strcmp(project_name,'race_encoding_simple')
-    conditions = {'asian','black','white'}; column = 'condNames';
-%     conditions = {'own_race','other_races'};column = 'condNames9';
+%     conditions = {'asian','black','white'}; column = 'condNames';
+    conditions = {'own_race','other_races'};column = 'condNames9';
+    conditions = {'my_race_ans','not_my_race_ans'};column = 'condNames8';
 %     load cdcol.mat
 %     plot_params.col = [cdcol.carmine;cdcol.ultramarine];
 end
@@ -182,10 +183,12 @@ for i = 1:length(T3.Properties.RowNames)
                     grouped_trials{ci} = setdiff(grouped_trials{ci},thr_raw);% make the grouped_trial and thr_raw in together
                     plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials{ci},:),1)];% we use smoothed data for plotting
                     plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all{ci},:),1)];
-                    plot_data_trials{ci}  = [plot_data_trials{ci};data_all.wave_sm(grouped_trials{ci},:)];
-                    plot_data_trials_all{ci} = [plot_data_trials_all{ci};data_all.wave_sm(grouped_trials_all{ci},:)];
+%                     plot_data{ci}  = [plot_data{ci};data_all.wave_sm(grouped_trials{ci},:)];
+%                     plot_data_all{ci} = [plot_data_all{ci};data_all.wave_sm(grouped_trials_all{ci},:)];% averaged across all trials
                     stats_data{ci} = [stats_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
                     stats_data_all{ci} = [stats_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];
+%                     stats_data{ci} = [stats_data{ci};data_all.wave(grouped_trials{ci},:)]; % this part of data were prepared for further comparison (original non-smoothed data)
+%                     stats_data_all{ci} = [stats_data_all{ci};data_all.wave(grouped_trials_all{ci},:)];% averaged across all trials
                 end
         end
     else
@@ -343,7 +346,7 @@ title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num)
 
 data_asian = mean(stats_data{1}(:,indx_per),2);
 data_black = mean(stats_data{2}(:,indx_per),2);
-data_white = mean(stats_data{2}(:,indx_per),2);
+data_white = mean(stats_data{3}(:,indx_per),2);
 data_anova = [data_asian;data_black;data_white];
 group_asian = repmat({'asian'},size(data_asian,1),1);
 group_black = repmat({'black'},size(data_black,1),1);
@@ -353,7 +356,7 @@ group = [group_asian;group_black;group_white];
 [p1,tbl1,stats1] = anova1(data_anova,group);
 std1 = [std(data_asian),std(data_black ),std(data_white)];
 m1 = multcompare(stats1,'ctype','tukey-kramer')
-
+% m1 = multcompare(stats1,'ctype','bonferroni')
 
 %% stats
 load('cdcol.mat')

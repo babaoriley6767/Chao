@@ -94,8 +94,6 @@ loc=cellfun('isempty', T3{:,'anat'} );
 T3(loc,:)=[];
 
 %%
-
-%%
 %define the plot and stats parameters first
 project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT'
 plot_params = genPlotParams(project_name,'timecourse');
@@ -470,10 +468,10 @@ end
 end
 
 cfg=[];
-cfg.view='rm';
+cfg.view='r';
 cfg.elecSize=12;
-cfg.surfType='inflated';    
-cfg.opaqueness=1;
+cfg.surfType='pial';    
+cfg.opaqueness=0.1;
 cfg.ignoreDepthElec='n';
 cfg.elecCoord=[coords.MNI_coord coords.isleft];
 cfg.elecNames=coords.channame;

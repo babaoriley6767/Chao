@@ -17,11 +17,11 @@ sbj_names = sbj_names_all(1:36);%China
 % sbj_names = sbj_names_all(37:end);%Stanford
 % sbj_names = sbj_names_all;%all
 
-indx_female = strcmp(sbj_genders(1:36),'F');%this part is the gender of the patient
-indx_male  = strcmp(sbj_genders(1:36),'M');%this part is the gender of the patient
+indxcohort = strcmp(sbj_genders(1:36),'F');%this part is the gender of the patient
+indxcohort  = strcmp(sbj_genders(1:36),'M');%this part is the gender of the patient
 
-sbj_names=sbj_names(indx_female)%this part is the gender of the patient
-sbj_names=sbj_names(indx_male)%this part is the gender of the patient
+sbj_names = sbj_names(indxcohort)%this part is the gender of the patient
+
 
 sbj_names = {'C18_49'};
 
@@ -57,23 +57,15 @@ anat = {'PCG'};anat_name='central area';
 side = 'none';%'L','R','none'
 
 
-anat = {'STS'};anat_name='STS';
 % Check on the meaning of the abbreviations
 anat_displ =  importdata('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/anat_abbreviation.txt');%pls select a directory to store the 
 disp(anat_displ);
 
+%%
+load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+%then this need to update,go to 'Creat_cell_of_tables.mat'
+T = T(indxcohort,1);
 
-%% Visit each excel table, add a name column, and concatenate them into a cell
-T = cell(size(sbj_names,1), 1);
-for i = 1:length(sbj_names)
-    %cd(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/' sbj_names{i}])%plz adjust accordingly to your ecosystem
-    T{i} = readtable(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/' sbj_names{i} '/' sbj_names{i} '_stats.xlsx']);
-    sbj_name_channame = cell(size(T{i},1),1);
-    for j = 1:size(T{i},1)
-        sbj_name_channame{j} = [sbj_names{i},'-',T{i}.glv_channame{j}];
-    end
-    T{i}.sbj_name_channame = sbj_name_channame;
-end
 %Creat another table with rows of specific cohorts and column of specific anatomical
 %structures
 sz = [size(sbj_names,1) size(anat,2)];
@@ -85,7 +77,7 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
+            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
             idx = idx1 & idx2;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
         end
@@ -118,29 +110,40 @@ T3 = table('Size',sz,'VariableTypes',varTypes,'VariableNames',{'anat'},'RowNames
 for i = 1:size(T3,1)
     T3{i,:}{:} = horzcat(T2{i,:}{:});
 end
-loc=cellfun('isempty', T3{:,'anat'} );% 
+loc=cellfun('isempty', T3{:,'anat'} );
 T3(loc,:)=[];
+
+% % s = rng;
+% rand37 = randperm(24,7);
+% T3.anat{7} = T3.anat{7}(rand37);
 %%
 %define the plot and stats parameters first
-project_name ='race_encoding_simple'% 'race_encoding_simple'or'Grad_CPT'
+project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT'
 plot_params = genPlotParams(project_name,'timecourse');
 plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 20;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
+plot_params.single_trial = false;
+plot_params.clust_per = true;% clusterd based permuation
 %%
 %make a specific selection of conditions and coloring
-
-conditions = {'female','male'}; column = 'condNames3';% this part is the gender of the test
-plot_params.col = [cdcol.raspberry_red;%this part is the gender of the test
-cdcol.blue];%this part is the gender of the test
-
-
- conditions = {'asian','black','white'}; column = 'condNames';
+if strcmp(project_name,'Grad_CPT')
+    conditions = {'mtn','city'};column = 'condNames';
+    load cdcol.mat
+    plot_params.col = [cdcol.carmine;cdcol.ultramarine];
+elseif strcmp(project_name,'race_encoding_simple')
+    conditions = {'asian','black','white'}; column = 'condNames';
+%     conditions = {'own_race','other_races'};column = 'condNames9';
+%     load cdcol.mat
+%     plot_params.col = [cdcol.carmine;cdcol.ultramarine];
+end
 
 %%
 %concatenate  data for conditions
 plot_data = cell(1,length(conditions));
 plot_data_all = cell(1,length(conditions));
+plot_data_trials = cell(1,length(conditions));
+plot_data_trials_all = cell(1,length(conditions));
 stats_data = cell(1,length(conditions));
 stats_data_all = cell(1,length(conditions));
 for i = 1:length(T3.Properties.RowNames)
@@ -159,9 +162,9 @@ for i = 1:length(T3.Properties.RowNames)
             data_all = concatBlocks(sbj_name, block_names,dirs,T3.anat{i}(j),'HFB','Band',{'wave'},['stimlock_bl_corr']);%'stimlock_bl_corr'
             
             %smooth is in the trial level
-            winSize = floor(data_all.fsample*plot_params.sm);%this part is smooth1
-            gusWin = gausswin(winSize)/sum(gausswin(winSize));%this part is smooth2
-            data_all.wave_sm = convn(data_all.wave,gusWin','same');%this part is smooth3
+            winSize = floor(data_all.fsample*plot_params.sm);
+            gusWin = gausswin(winSize)/sum(gausswin(winSize));
+            data_all.wave_sm = convn(data_all.wave,gusWin','same');
             
             [grouped_trials_all,~] = groupConds(conditions,data_all.trialinfo,column,'none',[],false);
             [grouped_trials,cond_names] = groupConds(conditions,data_all.trialinfo,column,stats_params.noise_method,stats_params.noise_fields_trials,false);
@@ -179,11 +182,13 @@ for i = 1:length(T3.Properties.RowNames)
             end
 
                 for ci = 1:length(conditions)
-                    grouped_trials{ci} = setdiff(grouped_trials{ci},thr_raw);% 
-                    plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials{ci},:),1)];
+                    grouped_trials{ci} = setdiff(grouped_trials{ci},thr_raw);% make the grouped_trial and thr_raw in together
+                    plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials{ci},:),1)];% we use smoothed data for plotting
                     plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all{ci},:),1)];
-                    stats_data{ci} = [plot_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
-                    stats_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];
+                    plot_data_trials{ci}  = [plot_data_trials{ci};data_all.wave_sm(grouped_trials{ci},:)];
+                    plot_data_trials_all{ci} = [plot_data_trials_all{ci};data_all.wave_sm(grouped_trials_all{ci},:)];
+                    stats_data{ci} = [stats_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
+                    stats_data_all{ci} = [stats_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];
                 end
         end
     else
@@ -196,39 +201,27 @@ end
 %     plot_data{2} = plot_data{2}(half_index,:);
 % else
 % end
-%% plot figure based on aboving data
+% plot figure based on aboving data
 clear h
 load('cdcol.mat')
 figureDim = [100 100 .23 .35 ];
 figure('units', 'normalized', 'outerposition', figureDim)
 for ci = 1:length(conditions)
     lineprops.col{1} = plot_params.col(ci,:);
-%     if plot_params.single_trial_replot
-%         for di = 1:size(plot_data{ci},1)
-%             if ~isempty(find(plot_data{ci}(di,:)>=plot_params.single_trial_thr))
-%                 fprintf('You have deleted the data over threshold %d from the condition %d \n;',plot_params.single_trial_thr,ci);
-%             else
-%             end
-%         end
-%         [thr_raw,thr_column] = find(plot_data{ci} >= plot_params.single_trial_thr);
-%         thr_raw = unique(thr_raw);
-%         plot_data{ci}(thr_raw,:)=[];
-        %plot_data_stac{ci} = plot_data{ci}(:,(find(abs(data.time-plot_params.clust_per_win(1))<0.001):find(abs(data.time-plot_params.clust_per_win(2))<0.001)));%%%%%Chao the time window to do the permutation
-%       cond_names{ci} = [cond_names{ci},' (',num2str(size(plot_data{ci},1)),' of ',num2str(size(plot_data_all{ci},1)), ' trials)'];
-%     end
     if ~strcmp(plot_params.eb,'none')
         lineprops.style= '-';
         lineprops.width = plot_params.lw;
         lineprops.edgestyle = '-';
         if strcmp(plot_params.eb,'ste')
             mseb(data_all.time,nanmean(plot_data{ci}),nanstd(plot_data{ci})/sqrt(size(plot_data{ci},1)),lineprops,1);
+        
             hold on
         else %'std'
             mseb(data_all.time,nanmean(plot_data{ci}),nanstd(plot_data{ci}),lineprops,1);
             hold on
         end
-    else
     end
+ 
     h(ci)=plot(data_all.time,nanmean(plot_data{ci}),'LineWidth',plot_params.lw,'Color',plot_params.col(ci,:));
     hold on
 end
@@ -246,29 +239,87 @@ if strcmp(anat_name,'INSULA')
 else
 end
 
-%xlabel(plot_params.xlabel);
-%ylabel(plot_params.ylabel);
 set(gca,'fontsize',plot_params.textsize)
 box off
 
-% if strcmp(anat_name, 'INSULA')
-%     y_lim = [-0.2 0.7];
-% elseif strcmp(anat_name, 'ACC MCC')
-%     y_lim = [-.1 .7];
-% elseif strcmp(anat_name, 'FG')
-%     y_lim = [-.5 4.2];
-% elseif strcmp(anat_name, 'IFS IFG')
-%     y_lim = [-.2 2];
-% elseif strcmp(anat_name, 'SFS SFG')
-%     y_lim = [-.2 .9];
-% elseif strcmp(anat_name, 'OFC')
-%     y_lim = [-.4 1.5];
-% elseif strcmp(anat_name, 'amygdala')
-%     y_lim = [-.2 0.5];
-% else
-    y_lim = ylim;
-% end
 
+    y_lim = ylim;
+
+    % this part is clusterd based permuation
+   
+if plot_params.clust_per
+    
+    ylim_stac = y_lim;
+    indx_per = find(abs(data_all.time-plot_params.clust_per_win(1))<0.001):find(abs(data_all.time-plot_params.clust_per_win(2))<0.001);
+    data.time_stac = data_all.time(indx_per);
+    
+    data_asian = stats_data{1}(:,indx_per);
+    data_asian = permute(data_asian,[3 2 1]);
+    data_black = stats_data{2}(:,indx_per);
+    data_black = permute(data_black,[3 2 1]);
+    data_white = stats_data{3}(:,indx_per);
+    data_white = permute(data_white,[3 2 1]);
+    rng('default')
+    
+    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_black,[]);
+    
+    cluster_indx = find(clust_info.pos_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of asian higher than black are ' num2str(clust_info.pos_clust_pval)])
+    h(4) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    
+    cluster_indx = find(clust_info.neg_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of asian lower than black are ' num2str(clust_info.neg_clust_pval)])
+    h(4) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    
+    
+    
+    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_white,[]);
+    
+    cluster_indx = find(clust_info.pos_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of asian higher than white are ' num2str(clust_info.pos_clust_pval)])
+    h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+    
+    cluster_indx = find(clust_info.neg_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of asian lower than white are ' num2str(clust_info.neg_clust_pval)])
+    h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+    
+    
+    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_black, data_white,[]);
+    
+    cluster_indx = find(clust_info.pos_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of black higher than white are ' num2str(clust_info.pos_clust_pval)])
+    h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+    
+    cluster_indx = find(clust_info.neg_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of ablack lower than white are ' num2str(clust_info.neg_clust_pval)])
+    h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+    
+    
+    
+    cond_names_stac = cond_names;
+    cond_names_stac{1,1} = 'asian';
+    cond_names_stac{1,2} = 'black';
+    cond_names_stac{1,3} = 'white';
+    cond_names_stac{1,4} = 'asian vs black';
+    cond_names_stac{1,5} = 'asian vs white';
+    cond_names_stac{1,6} = 'black vs white';
+else
+end
+
+
+% take care of the axis, xlim, ylim, legend etc.
 if size(data_all.trialinfo.allonsets,2) > 1
     time_events = cumsum(nanmean(diff(data_all.trialinfo.allonsets,1,2)));
     for i = 1:length(time_events)
@@ -291,9 +342,36 @@ xlabel('Time(S)')
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
 title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+% anova and post hoc
 
+data_asian = mean(stats_data{1}(:,indx_per),2);
+data_black = mean(stats_data{2}(:,indx_per),2);
+data_white = mean(stats_data{3}(:,indx_per),2);
+data_anova = [data_asian;data_black;data_white];
+group_asian = repmat({'asian'},size(data_asian,1),1);
+group_black = repmat({'black'},size(data_black,1),1);
+group_white = repmat({'white'},size(data_white,1),1);
+group = [group_asian;group_black;group_white];
 %cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+[p1,tbl1,stats1] = anova1(data_anova,group);
+std1 = [std(data_asian),std(data_black ),std(data_white)];
+m1 = multcompare(stats1,'ctype','tukey-kramer')
+% m1 = multcompare(stats1,'ctype','bonferroni')
 
+%% stats
+load('cdcol.mat')
+figureDim = [100 100 .23 .35 ];
+figure('units', 'normalized', 'outerposition', figureDim)
+for ci = 1:length(conditions)
+       plot_params.single_trial
+            subplot(3,1,ci)
+            plot(data_all.time,plot_data_trials{ci}', 'Color',plot_params.col(ci,:))
+            hold on
+            y_lim = [-1,10];
+            xlim(plot_params.xlim)
+            ylim(y_lim)
+      
+end
 %% stats
 [H,P,CI,STATS] = ttest2(stats_data{1},stats_data{2}); STATS.H = H; STATS.P = P; STATS.CI = CI;
 
@@ -311,7 +389,7 @@ barh(x,y)
 set(gca,'fontsize',plot_params.textsize)
 sbj_names_num = size(T3,1);
 title(['distribution of sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
-
+set(gca,'XTick',[0:max(y)]);
 %cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
 %% plot the sites in MNI space 
 %This part can work but the figure is not pretty, I'm still working on this part, if you know some way that we could plot a nicer brain
@@ -341,9 +419,10 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
+            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
             idx = idx1 & idx2;
             coords_in_T = [T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3];
+%             coords_in_T = [T{i}.fsaverageINF_coord_1 T{i}.fsaverageINF_coord_2 T{i}.fsaverageINF_coord_3];
             coords_in_T = coords_in_T(idx,:);
             LvsR_in_T = T{i}.LvsR(idx,:);
             channame_in_T = T{i}.sbj_name_channame(idx,:);
@@ -383,7 +462,7 @@ end
 
 % this is for flip
 if cfg.flip_right
-for i = 1:length(coords.MNI_coord)
+for i = 1:size(coords.MNI_coord,1)
     if coords.MNI_coord(i,1) <= 0
         coords.MNI_coord(i,1) = coords.MNI_coord(i,1)+2*abs(coords.MNI_coord(i,1));
     end
@@ -428,10 +507,10 @@ for i = 1:size(coords.channame)
 end
 
 cfg=[];
-cfg.view='r';
+cfg.view='rm';
 cfg.elecSize=12;
-cfg.surfType='inflated';    
-cfg.opaqueness=1;
+cfg.surfType='pial';    
+cfg.opaqueness=0.2;
 cfg.ignoreDepthElec='n';
 cfg.elecCoord=[coords.MNI_coord coords.isleft];
 cfg.elecNames=coords.channame;
