@@ -55,6 +55,7 @@ anat = {'SFG','SFS','MFG','IFS','IFG','OFC','MPG','SMA','VMPFC','ACC','MCC','PCC
     'FOP','POP','TOP','PARL','INSULA','BASAL'};anat_name='all available';
 anat = {'WM','OUT','EMPTY','LESION'};;anat_name='exclude';
 
+
 side = 'none';%'L','R','none'
 
 
@@ -117,26 +118,24 @@ end
 loc=cellfun('isempty', T3{:,'anat'} );
 T3(loc,:)=[];
 
-% sum(cellfun(@numel,T3.anat))
-% % s = rng;
-% rand37 = randperm(24,7);
-% T3.anat{7} = T3.anat{7}(rand37);
+
 %% display info of behav data
 behv = readtable(['/Users/chao/Desktop/Project_in_Stanford/01_RACE/4_working_data/Behavioral_accuracy/results_summary.xlsx']);
 behv_indx = ismember(behv.Chao_patient_ID_in_server,T3.Properties.RowNames);
 disp(['the mean of accuracy in ' anat{:} ' is ' num2str(mean(behv.Race_CatAcc_SR(behv_indx))) ' and the std is ' num2str(std(behv.Race_CatAcc_SR(behv_indx)))]);
 %%
 %define the plot and stats parameters first
-project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT'
+project_name ='Grad_CPT';% 'race_encoding_simple'or'Grad_CPT'  % The might be error here because of the naming some are GradCPT and some are Grad_CPT
 plot_params = genPlotParams(project_name,'timecourse');
 plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
 plot_params.single_trial = false;
 plot_params.clust_per = true;% clusterd based permuation
+plot_params.clust_per_win = [0 1];
 %%
 %make a specific selection of conditions and coloring
-if strcmp(project_name,'Grad_CPT')
+if strcmp(project_name,'Grad_CPT') % The might be error here because of the naming some are GradCPT and some are Grad_CPT
     conditions = {'mtn','city'};column = 'condNames';
     load cdcol.mat
     plot_params.col = [cdcol.carmine;cdcol.ultramarine];
@@ -169,7 +168,7 @@ for i = 1:length(T3.Properties.RowNames)
         dirs = InitializeDirs(project_name, sbj_name, comp_root, server_root, code_root);
         load([dirs.data_root,filesep,'OriginalData',filesep,sbj_name,filesep,'global_',project_name,'_',sbj_name,'_',block_names{1},'.mat'])
         for j = 1:length(T3.anat{i})
-            data_all = concatBlocks(sbj_name, block_names,dirs,T3.anat{i}(j),'HFB','Band',{'wave'},['stimlock_bl_corr']);%'stimlock_bl_corr'
+            data_all = concatBlocks(sbj_name, block_names,dirs,T3.anat{i}(j),'HFB','Band',{'wave'},['stimlock']);%'stimlock_bl_corr'
             
             %smooth is in the trial level
             winSize = floor(data_all.fsample*plot_params.sm);
@@ -265,68 +264,63 @@ if plot_params.clust_per
     indx_per = find(abs(data_all.time-plot_params.clust_per_win(1))<0.001):find(abs(data_all.time-plot_params.clust_per_win(2))<0.001);
     data.time_stac = data_all.time(indx_per);
     
-    data_asian = stats_data{1}(:,indx_per);
-    data_asian = permute(data_asian,[3 2 1]);
-    data_black = stats_data{2}(:,indx_per);
-    data_black = permute(data_black,[3 2 1]);
-    data_white = stats_data{3}(:,indx_per);
-    data_white = permute(data_white,[3 2 1]);
+    data_mtn = stats_data{1}(:,indx_per);
+    data_mtn = permute(data_mtn,[3 2 1]);
+    data_city = stats_data{2}(:,indx_per);
+    data_city = permute(data_city,[3 2 1]);
     rng('default')
     
-    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_black,[]);
+    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_mtn, data_city,[]);
     
     cluster_indx = find(clust_info.pos_clust_pval<0.05);
     cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
     cluster_sig(cluster_sig==0)=NaN;
-    warning(['cluster p value of asian higher than black are ' num2str(clust_info.pos_clust_pval)])
-    h(4) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    warning(['cluster p value of mtn higher than city are ' num2str(clust_info.pos_clust_pval)])
+    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
     
     cluster_indx = find(clust_info.neg_clust_pval<0.05);
     cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
     cluster_sig(cluster_sig==0)=NaN;
-    warning(['cluster p value of asian lower than black are ' num2str(clust_info.neg_clust_pval)])
-    h(4) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    warning(['cluster p value of mtn lower than city are ' num2str(clust_info.neg_clust_pval)])
+    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
     
     
     
-    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_white,[]);
-    
-    cluster_indx = find(clust_info.pos_clust_pval<0.05);
-    cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
-    cluster_sig(cluster_sig==0)=NaN;
-    warning(['cluster p value of asian higher than white are ' num2str(clust_info.pos_clust_pval)])
-    h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
-    
-    cluster_indx = find(clust_info.neg_clust_pval<0.05);
-    cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
-    cluster_sig(cluster_sig==0)=NaN;
-    warning(['cluster p value of asian lower than white are ' num2str(clust_info.neg_clust_pval)])
-    h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
-    
-    
-    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_black, data_white,[]);
-    
-    cluster_indx = find(clust_info.pos_clust_pval<0.05);
-    cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
-    cluster_sig(cluster_sig==0)=NaN;
-    warning(['cluster p value of black higher than white are ' num2str(clust_info.pos_clust_pval)])
-    h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
-    
-    cluster_indx = find(clust_info.neg_clust_pval<0.05);
-    cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
-    cluster_sig(cluster_sig==0)=NaN;
-    warning(['cluster p value of ablack lower than white are ' num2str(clust_info.neg_clust_pval)])
-    h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
-    
-    
-    
+%     [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_white,[]);
+%     
+%     cluster_indx = find(clust_info.pos_clust_pval<0.05);
+%     cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
+%     cluster_sig(cluster_sig==0)=NaN;
+%     warning(['cluster p value of asian higher than white are ' num2str(clust_info.pos_clust_pval)])
+%     h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+%     
+%     cluster_indx = find(clust_info.neg_clust_pval<0.05);
+%     cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
+%     cluster_sig(cluster_sig==0)=NaN;
+%     warning(['cluster p value of asian lower than white are ' num2str(clust_info.neg_clust_pval)])
+%     h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+%     
+%     
+%     [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_black, data_white,[]);
+%     
+%     cluster_indx = find(clust_info.pos_clust_pval<0.05);
+%     cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
+%     cluster_sig(cluster_sig==0)=NaN;
+%     warning(['cluster p value of black higher than white are ' num2str(clust_info.pos_clust_pval)])
+%     h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+%     
+%     cluster_indx = find(clust_info.neg_clust_pval<0.05);
+%     cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
+%     cluster_sig(cluster_sig==0)=NaN;
+%     warning(['cluster p value of ablack lower than white are ' num2str(clust_info.neg_clust_pval)])
+%     h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+%     
+%     
+%     
     cond_names_stac = cond_names;
-    cond_names_stac{1,1} = 'asian';
-    cond_names_stac{1,2} = 'black';
-    cond_names_stac{1,3} = 'white';
-    cond_names_stac{1,4} = 'asian vs black';
-    cond_names_stac{1,5} = 'asian vs white';
-    cond_names_stac{1,6} = 'black vs white';
+    cond_names_stac{1,1} = 'mtn';
+    cond_names_stac{1,2} = 'city';
+    cond_names_stac{1,3} = 'mtn vs city';
 else
 end
 
@@ -343,7 +337,7 @@ plot([0 0],y_lim, 'Color', [0 0 0], 'LineWidth',2)
 plot(xlim,[0 0], 'Color', [.5 .5 .5], 'LineWidth',1)
 ylim(y_lim)
 box on 
-leg = legend(h,cond_names,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
+leg = legend(h,cond_names_stac,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
 legend boxoff
 set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
@@ -354,55 +348,7 @@ xlabel('Time(S)')
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
 title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
-%% anova and post hoc
 
-data_asian = mean(stats_data{1}(:,indx_per),2);
-data_black = mean(stats_data{2}(:,indx_per),2);
-data_white = mean(stats_data{3}(:,indx_per),2);
-data_anova = [data_asian;data_black;data_white];
-group_asian = repmat({'asian'},size(data_asian,1),1);
-group_black = repmat({'black'},size(data_black,1),1);
-group_white = repmat({'white'},size(data_white,1),1);
-group = [group_asian;group_black;group_white];
-%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
-[p1,tbl1,stats1] = anova1(data_anova,group);
-std1 = [std(data_asian),std(data_black ),std(data_white)];
-m1 = multcompare(stats1,'ctype','tukey-kramer')
-% m1 = multcompare(stats1,'ctype','bonferroni')
-% m1 = multcompare(stats1,'ctype','lsd')
-%% stats
-load('cdcol.mat')
-figureDim = [100 100 .23 .35 ];
-figure('units', 'normalized', 'outerposition', figureDim)
-for ci = 1:length(conditions)
-       plot_params.single_trial
-            subplot(3,1,ci)
-            plot(data_all.time,plot_data_trials{ci}', 'Color',plot_params.col(ci,:))
-            hold on
-            y_lim = [-1,10];
-            xlim(plot_params.xlim)
-            ylim(y_lim)
-      
-end
-%% stats
-[H,P,CI,STATS] = ttest2(stats_data{1},stats_data{2}); STATS.H = H; STATS.P = P; STATS.CI = CI;
-
-%% plot the distribution of sites among cases
-figureDim = [100 100 .23 .35 ];
-figure('units', 'normalized', 'outerposition', figureDim)
-%x = 1:sbj_names_num;
-x = cell(1,size(T3,1));
-for i = 1:size(T3,1)
-    x{i} = T3.Row{i};
-end
-x=categorical(x);
-y = cellfun(@numel, T3{:,'anat'} );
-barh(x,y)
-set(gca,'fontsize',plot_params.textsize)
-sbj_names_num = size(T3,1);
-title(['distribution of sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
-set(gca,'XTick',[0:max(y)]);
-%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
 %% plot the sites in MNI space 
 %This part can work but the figure is not pretty, I'm still working on this part, if you know some way that we could plot a nicer brain
 %plz tell me know, chao
@@ -431,7 +377,7 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
+            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
             idx = idx1 & idx2;
             coords_in_T = [T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3];
 %             coords_in_T = [T{i}.fsaverageINF_coord_1 T{i}.fsaverageINF_coord_2 T{i}.fsaverageINF_coord_3];
@@ -534,113 +480,4 @@ cfgOut=plotPialSurf_v2('fsaverage',cfg);
 
 
 
-
-%% Check whether the left and right coordinates are correct in the the subjvar 
-for i = 1:length(sbj_names_all)
-    load(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/',sbj_names_all{i},'/','subjVar_',sbj_names_all{i},'.mat'])
-    elinfo_link = subjVar.elinfo;
-    
-    for j = 1:size(elinfo_link,1)
-        if strcmp(elinfo_link.LvsR{j},'L')&&elinfo_link.MNI_coord(j,1)<0
-            disp('good to go')
-        elseif strcmp(elinfo_link.LvsR{j},'R')&&elinfo_link.MNI_coord(j,1)>0
-            disp('good to go')
-        elseif strcmp(elinfo_link.LvsR{j},'L')&&elinfo_link.MNI_coord(j,1)>0
-            warning(['please check the subjvar' sbj_names{i}])
-            return
-        elseif strcmp(elinfo_link.LvsR{j},'R')&& elinfo_link.MNI_coord(j,1)<0
-            warning(['please check the subjvar' sbj_names{i}])
-            return
-        else
-            disp('catched empty site')
-        end
-    end
-end
-%%
-
-
-
-
-
-%% pedro method
-task = 'MMR'
-cond_names = {'math', 'autobio'};
-column = 'condNames';
-data = concatenate_multiple_elect(elect_list, task, dirs, 'Band', 'HFB', 'stim');
-plot_group_elect(data, task, cond_names, column);
-%% about the sheet
-% take care of the str and num of FS_ind and glv_index
-for i = 1:size(T,1)
-    if ~iscell(T{i}.FS_ind)
-       T{i}.FS_ind = num2cell(T{i}.FS_ind);
-       for j = 1:size(T{i},1)
-           T{i}.FS_ind{j} = num2str(T{i}.FS_ind{j});
-       end
-    else
-    end 
-end
-for i = 1:size(T,1)
-    if ~iscell(T{i}.glv_index)
-       T{i}.glv_index = num2cell(T{i}.glv_index);
-       for j = 1:size(T{i},1)
-           T{i}.glv_index{j} = num2str(T{i}.glv_index{j});
-       end
-    else
-    end
-end
-
-for i = 1:size(T,1)
-    if ~iscell(T{i}.label)
-       T{i}.label = num2cell(T{i}.label);
-       for j = 1:size(T{i},1)
-           T{i}.label{j} = num2str(T{i}.label{j});
-       end
-    else
-    end
-end
-% concatenate table vertically
-bigtable = [T{1};T{2}];
-for tidx = 3:numel(T)
-   bigtable = [bigtable; T{tidx}];
-end
-
-%% Pedro's code 
-
-% % Group analyses
-% 
-% 1. Select which electrodes to include
-% -Statistical
-%     Compare all trails agains baseline
-%     permutation test between avg baseline period whithin trial vs. avg 1s period within trial
-% -Anatomical
-%     ROIS
-% After these steps you should have the electrode_list
-% 
-% 2. Concatenate all electrodes of interest
-chan_num = [];
-sbj_name_p = [];
-for i = 1:size(T3,1)
-   for j = 1:size(T3.anat{i},2)
-    a = T3.anat{i}(j);
-    chan_num = [chan_num;a];
-    b = T3.Row(i);
-    sbj_name_p = [sbj_name_p;b];
-   end
-end
-
-project_name = 'race_encoding_simple';
-electrode_list = table(chan_num,sbj_name_p);
-dirs = InitializeDirs(project_name, sbj_name_p{1}, comp_root, server_root, code_root);
-data_all = concatenate_multiple_elect(electrode_list, project_name, dirs, 'Band', 'HFB', 'stim');
-cond_names = {'asian','black','white'};column = 'condNames';
-plot_group_elect(data_all, project_name, cond_names, column);
-% 3. Compare two conditions across electrodes
-% -Define conditions and time window
-%     cond_names = {'autobio', 'math'};
-%     column = 'condNames';
-stats_params = genStatsParams(project_name);
-% -Average each electrode per condition within the 1s period
-%     (now you have a single value per electrode per condition)
-%     Ready to compare electrodes with independent sample t-test
-STATS = stats_group_elect(data_all,data_all.time, project_name,cond_names, column, stats_params);
 

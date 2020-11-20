@@ -12,6 +12,10 @@ sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';
 
 %make a specific selection of cohort
 indxcohort = 1:36;%China
+
+
+sbj_names_all = {'C18_30';'C18_41';'C19_53'};
+indxcohort = 1:3;
 % indxcohort = [37:44];%Stanfordc
 % indxcohort = [1:44];%2 Centers
 
@@ -54,6 +58,7 @@ anat = {'SFG','SFS','MFG','IFS','IFG','OFC','MPG','SMA','VMPFC','ACC','MCC','PCC
     ,'TP','OTS','FG','CS','PHG','PRECENTRAL G','POSTCENTRAL G','SPL','IPL','IPS','PCG','CG','POF','CF','LG','SOG','MOG','IOG','EC',...
     'FOP','POP','TOP','PARL','INSULA','BASAL'};anat_name='all available';
 anat = {'WM','OUT','EMPTY','LESION'};;anat_name='exclude';
+
 
 side = 'none';%'L','R','none'
 
@@ -127,7 +132,7 @@ behv_indx = ismember(behv.Chao_patient_ID_in_server,T3.Properties.RowNames);
 disp(['the mean of accuracy in ' anat{:} ' is ' num2str(mean(behv.Race_CatAcc_SR(behv_indx))) ' and the std is ' num2str(std(behv.Race_CatAcc_SR(behv_indx)))]);
 %%
 %define the plot and stats parameters first
-project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT'
+project_name ='Grad_CPT';% 'race_encoding_simple'or'Grad_CPT'  % The might be error here because of the naming some are GradCPT and some are Grad_CPT
 plot_params = genPlotParams(project_name,'timecourse');
 plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ...
@@ -136,7 +141,7 @@ plot_params.single_trial = false;
 plot_params.clust_per = true;% clusterd based permuation
 %%
 %make a specific selection of conditions and coloring
-if strcmp(project_name,'Grad_CPT')
+if strcmp(project_name,'Grad_CPT') % The might be error here because of the naming some are GradCPT and some are Grad_CPT
     conditions = {'mtn','city'};column = 'condNames';
     load cdcol.mat
     plot_params.col = [cdcol.carmine;cdcol.ultramarine];
@@ -169,7 +174,7 @@ for i = 1:length(T3.Properties.RowNames)
         dirs = InitializeDirs(project_name, sbj_name, comp_root, server_root, code_root);
         load([dirs.data_root,filesep,'OriginalData',filesep,sbj_name,filesep,'global_',project_name,'_',sbj_name,'_',block_names{1},'.mat'])
         for j = 1:length(T3.anat{i})
-            data_all = concatBlocks(sbj_name, block_names,dirs,T3.anat{i}(j),'HFB','Band',{'wave'},['stimlock_bl_corr']);%'stimlock_bl_corr'
+            data_all = concatBlocks(sbj_name, block_names,dirs,T3.anat{i}(j),'HFB','Band',{'wave'},['stimlock']);%'stimlock_bl_corr'
             
             %smooth is in the trial level
             winSize = floor(data_all.fsample*plot_params.sm);
@@ -265,15 +270,13 @@ if plot_params.clust_per
     indx_per = find(abs(data_all.time-plot_params.clust_per_win(1))<0.001):find(abs(data_all.time-plot_params.clust_per_win(2))<0.001);
     data.time_stac = data_all.time(indx_per);
     
-    data_asian = stats_data{1}(:,indx_per);
-    data_asian = permute(data_asian,[3 2 1]);
-    data_black = stats_data{2}(:,indx_per);
-    data_black = permute(data_black,[3 2 1]);
-    data_white = stats_data{3}(:,indx_per);
-    data_white = permute(data_white,[3 2 1]);
+    data_mtn = stats_data{1}(:,indx_per);
+    data_mtn = permute(data_mtn,[3 2 1]);
+    data_city = stats_data{2}(:,indx_per);
+    data_city = permute(data_city,[3 2 1]);
     rng('default')
     
-    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_black,[]);
+    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_mtn, data_city,[]);
     
     cluster_indx = find(clust_info.pos_clust_pval<0.05);
     cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
