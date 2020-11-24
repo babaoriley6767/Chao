@@ -118,7 +118,7 @@ for i = 1:size(T3,1)
 end
 loc=cellfun('isempty', T3{:,'anat'} );
 T3(loc,:)=[];
-
+d
 % % s = rng;
 % rand37 = randperm(24,7);
 % T3.anat{7} = T3.anat{7}(rand37);

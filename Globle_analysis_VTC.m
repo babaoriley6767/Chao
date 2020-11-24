@@ -8,17 +8,16 @@ addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_preproc-master/'))
 sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';'C18_27';'C18_28';'C18_29';'C18_30'...
     ;'C18_31';'C18_32';'C18_33';'C18_34';'C18_35';'C18_37';'C18_38';'C18_39';'C18_40';'C18_41';'C18_42';'C18_43';'C18_44'...
     ;'C18_45';'C18_46';'C18_47';'C18_49';'C19_50';'C19_51';'C19_52';'C19_53';'C19_55';'C19_58';'C19_60';'C19_62';'S17_114_EB'...
-    ;'S17_116_AA';'S17_118_TW';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT'};
+    ;'S17_116_AA';'S17_118_TW';'S19_145_PC';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT'};
 
-%make a specific selection of cohort
-sbj_names = sbj_names_all(1:36);%China
-sbj_names = sbj_names_all(37:end);%Stanford
-sbj_names = sbj_names_all;%all
 
-sbj_names = {'C18_30';'C18_41';'C19_53'};
+sbj_names_all_VTC = {'C17_20';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';'C18_27';'C18_28';'C18_29';'C18_30'...
+    ;'C18_31';'C18_32';'C18_33';'C18_34';'C18_35';'C18_37';'C18_38';'C18_39';'C18_40';'C18_41';'C18_42';'C18_43';'C18_44'...
+    ;'C18_45';'C18_46';'C18_47';'C18_49';'C19_50';'C19_51';'C19_52';'C19_55';'C19_60';'C19_62'};
 
-%sbj_names = sbj_names_all([1:36,40,43]);% asian
-%sbj_names = sbj_names_all([37:39,41,42]);% white
+indxcohort = ismember(sbj_names_all,sbj_names_all_VTC);
+
+sbj_names = sbj_names_all(indxcohort);%China
 
 % define the the abbreviations of kinds of brian structures
 anat_all = {'SFG','SFS','MFG','IFS','IFG','OFC','MPG','SMA','VMPFC','ACC','MCC','PCC','STG','STS','MTG','ITS','ITG','AMY','HIPPO A','HIPPO M','HIPPO P'...
@@ -56,16 +55,10 @@ disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-T = cell(size(sbj_names,1), 1);
-for i = 1:length(sbj_names)
-    %cd(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/' sbj_names{i}])%plz adjust accordingly to your ecosystem
-    T{i} = readtable(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/' sbj_names{i} '/' sbj_names{i} '_stats.xlsx']);
-    sbj_name_channame = cell(size(T{i},1),1);
-    for j = 1:size(T{i},1)
-        sbj_name_channame{j} = [sbj_names{i},'-',T{i}.glv_channame{j}];
-    end
-    T{i}.sbj_name_channame = sbj_name_channame;
-end
+load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+%then this need to update,go to 'Creat_cell_of_tables.mat'
+T = T(indxcohort,1);
+channame = [];
 %Creat another table with rows of specific cohorts and column of specific anatomical
 %structures
 sz = [size(sbj_names,1) size(anat,2)];
@@ -117,7 +110,9 @@ T3(loc,:)=[];
 project_name ='VTCLoc';% 'race_encoding_simple'or'Grad_CPT'or'VTCLoc'
 plot_params = genPlotParams(project_name,'timecourse');
 plot_params.single_trial_replot = true;
-plot_params.single_trial_thr = 20;%the threshold of HFB it could be like 10 15 20 ...
+plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ... 
+plot_params.clust_per = true;
+plot_params.col = [0.8200 0 0.1800;0 0.1608 0.2353];
 stats_params = genStatsParams(project_name);
 %%
 %make a specific selection of conditions and coloring
@@ -140,6 +135,8 @@ plot_data = cell(1,length(conditions));
 plot_data_all = cell(1,length(conditions));
 stats_data = cell(1,length(conditions));
 stats_data_all = cell(1,length(conditions));
+grouped_trials_all_VTC = [];
+grouped_trials_VTC = [];
 for i = 1:length(T3.Properties.RowNames)
     if ~isempty(T3.anat{i})
         indx = i;
@@ -209,7 +206,7 @@ for i = 1:length(T3.Properties.RowNames)
 end
 
 if strcmp(project_name,'VTCLoc')
-    conditions = {'faces','randomly others'};
+    conditions_2 = {'faces','randomly others'};
 else
 end
 % randomly pick half of the other_races with fixed rng
@@ -224,7 +221,7 @@ clear h
 load('cdcol.mat')
 figureDim = [100 100 .23 .35 ];
 figure('units', 'normalized', 'outerposition', figureDim)
-for ci = 1:length(conditions)
+for ci = 1:length(conditions_2)
     lineprops.col{1} = plot_params.col(ci,:);
 %     if plot_params.single_trial_replot
 %         for di = 1:size(plot_data{ci},1)
@@ -292,6 +289,45 @@ box off
     y_lim = ylim;
 % end
 
+
+if plot_params.clust_per
+    
+    ylim_stac = y_lim;
+    indx_per = find(abs(data_all.time-plot_params.clust_per_win(1))<0.001):find(abs(data_all.time-plot_params.clust_per_win(2))<0.001);
+    data.time_stac = data_all.time(indx_per);
+    
+    data_face = stats_data{1}(:,indx_per);
+    data_face = permute(data_face,[3 2 1]);
+    data_randomly_others = stats_data{2}(:,indx_per);
+    data_randomly_others = permute(data_randomly_others,[3 2 1]);
+    rng('default')
+    
+    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_face, data_randomly_others,[]);
+    
+    cluster_indx = find(clust_info.pos_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of face higher than randomly others are ' num2str(clust_info.pos_clust_pval)])
+    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    
+    cluster_indx = find(clust_info.neg_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of face lower than randomly others are ' num2str(clust_info.neg_clust_pval)])
+    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    
+       
+    
+    cond_names_stac = conditions_2;
+    cond_names_stac{1,1} = 'faces';
+    cond_names_stac{1,2} = 'randomly others';
+    cond_names_stac{1,3} = 'faces vs randomly others';
+else
+end
+
+
+
+
 if size(data_all.trialinfo.allonsets,2) > 1
     time_events = cumsum(nanmean(diff(data_all.trialinfo.allonsets,1,2)));
     for i = 1:length(time_events)
@@ -303,11 +339,11 @@ plot([0 0],y_lim, 'Color', [0 0 0], 'LineWidth',2)
 plot(xlim,[0 0], 'Color', [.5 .5 .5], 'LineWidth',1)
 ylim(y_lim)
 box on 
-leg = legend(h,cond_names,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
+leg = legend(h,cond_names_stac,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
 legend boxoff
 set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
-legend off
+% legend off
 
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
@@ -315,25 +351,28 @@ title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num)
 
 %cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
 
-%% stats
-[H,P,CI,STATS] = ttest2(stats_data{1},stats_data{2}); STATS.H = H; STATS.P = P; STATS.CI = CI;
-
-%% plot the distribution of sites among cases
-figureDim = [100 100 .23 .35 ];
-figure('units', 'normalized', 'outerposition', figureDim)
-%x = 1:sbj_names_num;
-x = cell(1,size(T3,1));
-for i = 1:size(T3,1)
-    x{i} = T3.Row{i};
+%% stats paired permutation
+stats_params.paired = true;
+stats_params.all_trials = false;
+task_inds = find(data_all.time >= stats_params.task_win(1) & data_all.time <= stats_params.task_win(2));
+bl_inds = find(data_all.time >= stats_params.bl_win(1) & data_all.time <= stats_params.bl_win(2));
+for ci = 1:length(conditions_2)
+    dataA = nanmean(stats_data{1,ci}(:,task_inds),2);
+    dataB = nanmean(stats_data{1,ci}(:,bl_inds),2);
+    p = permutation_paired(dataA,dataB,stats_params.nreps);
+    if nanmean(dataA(:))>nanmean(dataB(:))
+        greater = 1;
+    else
+        greater = 2;
+    end
+    if greater == 1
+        disp(['group-level of HFB in ',anat_name,' in condition ',conditions_2{ci},'is highrer than baseline, and the P value is ', num2str(p)])
+    else
+    end
+    
 end
-x=categorical(x);
-y = cellfun(@numel, T3{:,'anat'} );
-barh(x,y)
-set(gca,'fontsize',plot_params.textsize)
-sbj_names_num = size(T3,1);
-title(['distribution of sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
 
-%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+
 %% plot the sites in MNI space 
 %This part can work but the figure is not pretty, I'm still working on this part, if you know some way that we could plot a nicer brain
 %plz tell me know, chao

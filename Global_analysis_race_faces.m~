@@ -360,6 +360,11 @@ sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
 title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
 
+%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+
+%% stats
+[H,P,CI,STATS] = ttest2(stats_data{1},stats_data{2}); STATS.H = H; STATS.P = P; STATS.CI = CI;
+
 
 %% stats paired permutation
 stats_params.paired = true;
@@ -376,17 +381,17 @@ for ci = 1:length(conditions)
         greater = 2;
     end
     if greater == 1
-        disp(['group-level of HFB in ',anat_name,' in condition ',conditions{ci},' is highrer than baseline, and the P value is ', num2str(p)])
+        disp(['group-level of HFB in ',anat_name,' in condition ',conditions{ci},'is highrer than baseline, and the P value is ', num2str(p)])
     else
     end
     
 end
 
 
-for ci = 3:length(conditions)
+for ci = 1:length(conditions)
     dataA = nanmean(stats_data{1,ci}(:,task_inds),2);
     dataB = nanmean(stats_data{1,ci}(:,bl_inds),2);
-    [h,p]= ttest(dataA,dataB);
+    [h p]= ttest(dataA,dataB);
     if nanmean(dataA(:))>nanmean(dataB(:))
         greater = 1;
     else
