@@ -81,7 +81,7 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
+            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
             idx = idx1 & idx2;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
         end
@@ -193,14 +193,14 @@ for i = 1:length(T3.Properties.RowNames)
 
                 for ci = 1:length(conditions)
                     grouped_trials{ci} = setdiff(grouped_trials{ci},thr_raw);% make the grouped_trial and thr_raw in together
-                    plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials{ci},:),1)];% we use smoothed data for plotting
-                    plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all{ci},:),1)];
-                    stats_data{ci} = [stats_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
-                    stats_data_all{ci} = [stats_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];                   
-%                     plot_data{ci}  = [plot_data{ci};data_all.wave_sm(grouped_trials{ci},:)];% averaged across all trials
-%                     plot_data_all{ci} = [plot_data_all{ci};data_all.wave_sm(grouped_trials_all{ci},:)];
-%                     stats_data{ci} = [stats_data{ci};data_all.wave(grouped_trials{ci},:)]; % this part of data were prepared for further comparison (original non-smoothed data)
-%                     stats_data_all{ci} = [stats_data_all{ci};data_all.wave(grouped_trials_all{ci},:)];
+%                     plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials{ci},:),1)];% we use smoothed data for plotting
+%                     plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all{ci},:),1)];
+%                     stats_data{ci} = [stats_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
+%                     stats_data_all{ci} = [stats_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];                   
+                    plot_data{ci}  = [plot_data{ci};data_all.wave_sm(grouped_trials{ci},:)];% averaged across all trials
+                    plot_data_all{ci} = [plot_data_all{ci};data_all.wave_sm(grouped_trials_all{ci},:)];
+                    stats_data{ci} = [stats_data{ci};data_all.wave(grouped_trials{ci},:)]; % this part of data were prepared for further comparison (original non-smoothed data)
+                    stats_data_all{ci} = [stats_data_all{ci};data_all.wave(grouped_trials_all{ci},:)];
                 end
         end
     else

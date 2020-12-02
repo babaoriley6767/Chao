@@ -61,6 +61,7 @@ disp(anat_displ);
 load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
+channame = [];
 %Creat another table with rows of specific cohorts and column of specific anatomical
 %structures
 sz = [size(sbj_names,1) size(anat,2)];
@@ -72,7 +73,7 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
+            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
             idx = idx1 & idx2;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
         end
@@ -114,7 +115,7 @@ plot_params = genPlotParams(project_name,'timecourse');
 plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
-plot_params.clust_per = true;
+plot_params.clust_per = false;
 %%
 %make a specific selection of conditions and coloring
 if strcmp(project_name,'Grad_CPT')
@@ -179,8 +180,12 @@ for i = 1:length(T3.Properties.RowNames)
                     grouped_trials{ci} = setdiff(grouped_trials{ci},thr_raw);% 
                     plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials{ci},:),1)];
                     plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all{ci},:),1)];
-                    stats_data{ci} = [plot_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
-                    stats_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];
+%                     plot_data{ci} = [plot_data{ci};data_all.wave_sm(grouped_trials{ci},:)];
+%                     plot_data_all{ci} = [plot_data_all{ci};data_all.wave_sm(grouped_trials_all{ci},:)];
+                    stats_data{ci} = [stats_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
+                    stats_data_all{ci} = [stats_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];
+%                     stats_data{ci} = [stats_data{ci};data_all.wave(grouped_trials{ci},:)]; % this part of data were prepared for further comparison (original non-smoothed data)
+%                     stats_data_all{ci} = [stats_data_all{ci};data_all.wave(grouped_trials_all{ci},:)];
                 end
         end
     else
@@ -359,6 +364,7 @@ set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
 title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+
 
 
 %% stats paired permutation

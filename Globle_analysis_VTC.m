@@ -70,9 +70,11 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
+            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
             idx = idx1 & idx2;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
+            channame_in_T = T{i}.sbj_name_channame(idx,:);
+            channame = [channame; channame_in_T];
         end
     end
 else
@@ -83,6 +85,8 @@ else
             idx3 = strcmp(T{i}.LvsR,side);
             idx = idx1 & idx2 & idx3;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
+            channame_in_T = T{i}.sbj_name_channame(idx,:);
+            channame = [channame; channame_in_T];
         end
     end
 end
@@ -186,10 +190,14 @@ for i = 1:length(T3.Properties.RowNames)
             if strcmp(project_name,'VTCLoc')
                 for ci = 1:2
                     grouped_trials_VTC{ci} = setdiff(grouped_trials_VTC{ci},thr_raw);%
-                    plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials_VTC{ci},:),1)];
-                    plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all_VTC{ci},:),1)];
-                    stats_data{ci} = [plot_data{ci};nanmean(data_all.wave(grouped_trials_VTC{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
-                    stats_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave(grouped_trials_all_VTC{ci},:),1)];
+%                     plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials_VTC{ci},:),1)];
+%                     plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all_VTC{ci},:),1)];
+%                     stats_data{ci} = [plot_data{ci};nanmean(data_all.wave(grouped_trials_VTC{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
+%                     stats_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave(grouped_trials_all_VTC{ci},:),1)];
+                    plot_data{ci} = [plot_data{ci};data_all.wave_sm(grouped_trials_VTC{ci},:)];
+                    plot_data_all{ci} = [plot_data_all{ci};data_all.wave_sm(grouped_trials_all_VTC{ci},:)];
+                    stats_data{ci} = [plot_data{ci};data_all.wave(grouped_trials_VTC{ci},:)]; % this part of data were prepared for further comparison (original non-smoothed data)
+                    stats_data_all{ci} = [plot_data_all{ci};data_all.wave(grouped_trials_all_VTC{ci},:)];
                 end
             else
                 for ci = 1:length(conditions)
