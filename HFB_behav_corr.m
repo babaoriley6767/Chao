@@ -50,6 +50,7 @@ anat = {'STG','STS','MTG','ITS','ITG'};anat_name='temporal area lateral';
 anat = {'PCG'};anat_name='PCG';
 anat = {'MTG'};anat_name = 'MTG';
 anat = {'IFS','IFG',}
+anat = {'INSULA','ACC','MCC','IFS','IFG','SFS','SFG'};anat_name = 'INSULA';
 anat = {'SFG','SFS','MFG','IFS','IFG','OFC','MPG','SMA','VMPFC','ACC','MCC','PCC','STG','STS','MTG','ITS','ITG','AMY','HIPPO A','HIPPO M','HIPPO P'...
     ,'TP','OTS','FG','CS','PHG','PRECENTRAL G','POSTCENTRAL G','SPL','IPL','IPS','PCG','CG','POF','CF','LG','SOG','MOG','IOG','EC',...
     'FOP','POP','TOP','PARL','INSULA','BASAL'};anat_name='all available';
@@ -66,97 +67,35 @@ disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
-%then this need to update,go to 'Creat_cell_of_tables.mat'
-T = T(indxcohort,1);
-
-%Creat another table with rows of specific cohorts and column of specific anatomical
-%structures
-sz = [size(sbj_names,1) size(anat,2)];
-varTypes = cell(1,size(anat,2));
-varTypes(:) = {'cell'};
-T2 = table('Size',sz,'VariableTypes',varTypes,'VariableNames',anat,'RowNames',sbj_names);
-%put the glv_index into each space of the table as a vector
-if isempty(side)||strcmp(side,'none')
-    for i = 1:length(sbj_names)
-        for j = 1:length(anat)
-            idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
-            idx = idx1 & idx2;
-            T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
-        end
-    end
+[channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');
+%% manully choose one site in each patients
+if strcmp(anat_name,'INSULA')
+    channame = channame([1,2,5,6],:);
+    T3.anat{3} = T3.anat{3}(3);
 else
-    for i = 1:length(sbj_names)
-        for j = 1:length(anat)
-            idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
-            idx3 = strcmp(T{i}.LvsR,side);
-            idx = idx1 & idx2 & idx3;
-            T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
-        end
-    end
 end
-%Since there may be empty electrodes in the stats sheet, Glv_index may be str. Here, all Glv_index in T2 will be transformed into vetor
-for i = 1:length(sbj_names)
-    for j = 1:length(anat)
-        if iscell(T2{sbj_names{i},anat{j}}{:})
-            T2{sbj_names{i},anat{j}}{:} = str2double(T2{sbj_names{i},anat{j}}{:});
-        end
-    end
-end
-%Creat a third table that horizontally concatenate all the specific
-%anatomical structures in together and get rid of the empty rows in T3
-sz = [size(sbj_names,1) 1];
-varTypes = cell(1,1);
-varTypes(:) = {'cell'};
-T3 = table('Size',sz,'VariableTypes',varTypes,'VariableNames',{'anat'},'RowNames',sbj_names);
-for i = 1:size(T3,1)
-    T3{i,:}{:} = horzcat(T2{i,:}{:});
-end
-loc=cellfun('isempty', T3{:,'anat'} );
-T3(loc,:)=[];
-
-% sum(cellfun(@numel,T3.anat))
-% % s = rng;
-% rand37 = randperm(24,7);
-% T3.anat{7} = T3.anat{7}(rand37);
 %% display info of behav data
 behv = readtable(['/Users/chao/Desktop/Project_in_Stanford/01_RACE/4_working_data/Behavioral_accuracy/results_summary.xlsx']);
 behv_indx = ismember(behv.Chao_patient_ID_in_server,T3.Properties.RowNames);
 disp(['the mean of accuracy in ' anat{:} ' is ' num2str(mean(behv.Race_CatAcc_SR(behv_indx))) ' and the std is ' num2str(std(behv.Race_CatAcc_SR(behv_indx)))]);
 %%
 %define the plot and stats parameters first
-project_name ='race_recall';% 'race_encoding_simple'or'Grad_CPT'
+project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT'
 plot_params = genPlotParams(project_name,'timecourse');
 plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
 plot_params.single_trial = false;
-plot_params.clust_per = false;% clusterd based permuation
+plot_params.clust_per = true;% clusterd based permuation
+stats_params.HFB_range = [.1 .5]';
 %%
-%make a specific selection of conditions and coloring
-if strcmp(project_name,'Grad_CPT')
-    conditions = {'mtn','city'};column = 'condNames';
-    load cdcol.mat
-    plot_params.col = [cdcol.carmine;cdcol.ultramarine];
-elseif strcmp(project_name,'race_recall')
+project_name = 'race_encoding_simple';
 conditions = {'asian','black','white'}; column = 'condNames';
-%     conditions = {'own_race','other_races'};column = 'condNames9';
-%     conditions = {'my_race_ans','not_my_race_ans'};column = 'condNames8';
-%     load cdcol.mat
-%     plot_params.col = [cdcol.carmine;cdcol.ultramarine];
-end
 
 %%
-%concatenate  data for conditions
-plot_data = cell(1,length(conditions));
-plot_data_all = cell(1,length(conditions));
-plot_data_trials = cell(1,length(conditions));
-plot_data_trials_all = cell(1,length(conditions));
-stats_data = cell(1,length(conditions));
-stats_data_all = cell(1,length(conditions));
-for i = 1:length(T3.Properties.RowNames)
+%creat a cell with N tables,each table has the HFB zscore and behav data
+HFB_behav = cell(1,length(channame));
+for i = 3:length(T3.Properties.RowNames)%loop across patients
     if ~isempty(T3.anat{i})
         indx = i;
         sbj_name = T3.Properties.RowNames{indx};%set basic pipeline parameters
@@ -167,8 +106,19 @@ for i = 1:length(T3.Properties.RowNames)
         end
         block_names = BlockBySubj(sbj_name,project_name);
         dirs = InitializeDirs(project_name, sbj_name, comp_root, server_root, code_root);
-        load([dirs.data_root,filesep,'OriginalData',filesep,sbj_name,filesep,'global_',project_name,'_',sbj_name,'_',block_names{1},'.mat'])
-        for j = 1:length(T3.anat{i})
+        load([dirs.data_root,filesep,'OriginalData',filesep,sbj_name,filesep,'global_',project_name,'_',sbj_name,'_',block_names{1},'.mat'])%loda globalVar
+        
+        trialinfo_encode = load(['/Volumes/CHAO_IRON_M/data/psychData/',sbj_name,filesep,block_names{:},filesep,'trialinfo_', block_names{:} '.mat']);%this is the encode behav .mat file
+        
+        soda_name = dir(fullfile(globalVar.psych_dir, 'sodata*.mat'));
+        trialinfo_recall_raw = load([globalVar.psych_dir '/' soda_name.name]);%this is the raw recall behav .mat file
+        
+        block_name_recall = BlockBySubj(sbj_name,'race_recall');
+        trialinfo_recall = load(['/Volumes/CHAO_IRON_M/data/psychData/',sbj_name,filesep,block_name_recall{:},filesep,'trialinfo_', block_name_recall{:} '.mat']);%%this is the recall behav .mat file
+        
+        [~,recall_index] = ismember(string(trialinfo_recall_raw.seq.active.race),string(trialinfo_recall_raw.seq.memory.active.race));%% key variable that link ecode and recall info, each patient has a unique recall_index
+   
+        for j = 1:length(T3.anat{i})%loop across site
             data_all = concatBlocks(sbj_name, block_names,dirs,T3.anat{i}(j),'HFB','Band',{'wave'},['stimlock_bl_corr']);%'stimlock_bl_corr'
             
             %smooth is in the trial level
@@ -179,10 +129,12 @@ for i = 1:length(T3.Properties.RowNames)
             [grouped_trials_all,~] = groupConds(conditions,data_all.trialinfo,column,'none',[],false);
             [grouped_trials,cond_names] = groupConds(conditions,data_all.trialinfo,column,stats_params.noise_method,stats_params.noise_fields_trials,false);
             % this part is to exclude HFB over a fixed threshold
+            
+            
             if plot_params.single_trial_replot
                 thr_raw =[];
                 for di = 1:size(data_all.wave,1)
-                    if ~isempty(find(data_all.wave(di,:)>=plot_params.single_trial_thr));
+                    if ~isempty(find(data_all.wave(di,:)>=plot_params.single_trial_thr))
                         fprintf('You have deleted the data over threshold %d from the data \n',plot_params.single_trial_thr);
                     else
                     end
@@ -190,29 +142,311 @@ for i = 1:length(T3.Properties.RowNames)
                 [thr_raw,thr_column] = find(data_all.wave >= plot_params.single_trial_thr);
                 thr_raw = unique(thr_raw);
             end
+            grouped_trial_after_threshold = setdiff(vertcat(grouped_trials{:}),thr_raw);
+            clean_trial = ismember([1:108]',grouped_trial_after_threshold);%
+            
+            
+            
+            if i == 1 % determine which site the code is working at
+                elec = j;
+            else
+                elec = sum(cellfun(@numel,T3.anat(1:(i-1))))+j;
+            end
+                % horizontally concat the encoding and recall trialinfo
+                HFB_behav{elec} = trialinfo_encode.trialinfo;
+                HFB_behav{elec}.encoding_seq = trialinfo_recall_raw.seq.active.race;
 
-                for ci = 1:length(conditions)
-                    grouped_trials{ci} = setdiff(grouped_trials{ci},thr_raw);% make the grouped_trial and thr_raw in together
-                    plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials{ci},:),1)];% we use smoothed data for plotting
-                    plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all{ci},:),1)];
-                    stats_data{ci} = [stats_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
-                    stats_data_all{ci} = [stats_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];                   
-%                     plot_data{ci}  = [plot_data{ci};data_all.wave_sm(grouped_trials{ci},:)];% averaged across all trials
-%                     plot_data_all{ci} = [plot_data_all{ci};data_all.wave_sm(grouped_trials_all{ci},:)];
-%                     stats_data{ci} = [stats_data{ci};data_all.wave(grouped_trials{ci},:)]; % this part of data were prepared for further comparison (original non-smoothed data)
-%                     stats_data_all{ci} = [stats_data_all{ci};data_all.wave(grouped_trials_all{ci},:)];
-                end
+                HFB_behav{elec}.recall_index = recall_index;
+                HFB_behav{elec}.recall_isCorrect = trialinfo_recall.trialinfo.isCorrect(recall_index,:);
+                HFB_behav{elec}.recall_RT = trialinfo_recall.trialinfo.RT(recall_index,:);
+                HFB_behav{elec}.certainty = trialinfo_recall.trialinfo.certainty(recall_index,:);
+                HFB_behav{elec}.certainty_RT = trialinfo_recall.trialinfo.pa_RT_certainty(recall_index,:);
+                HFB_behav{elec}.salience = trialinfo_recall.trialinfo.salience(recall_index,:);
+                HFB_behav{elec}.salience_RT = trialinfo_recall.trialinfo.pa_RT_salience(recall_index,:);
+                HFB_behav{elec}.clean_trial = clean_trial;
+                
+                HFB_range = dsearchn(data_all.time',stats_params.HFB_range);
+                HFB_behav{elec}.HFB_zscore = mean(data_all.wave(:,HFB_range(1):HFB_range(2)),2);
+                
+                 
         end
     else
     end
 end
-% randomly pick half of the other_races with fixed rng
-% if strcmp(column,'condNames9')
-%     rng('default');
-%     half_index = randsample(size(plot_data{2},1),round(size(plot_data{2},1)/2));
-%     plot_data{2} = plot_data{2}(half_index,:);
-% else
-% end
+
+%%
+%%stats
+% prepare the data
+HFB_behav_filt = cell(1,length(channame));
+HFB_behav_mix = cell(1,length(channame));
+
+for el = 1:length(channame)
+    
+    
+    HFB_behav_filt{el} = HFB_behav{el}(HFB_behav{el}.clean_trial,:);%exclude the HFO and spiky trial
+    
+    recall_ind = HFB_behav_filt{el}.recall_index;%split the table in to duplicate part and sigle part
+    [nbin, bin] = histc(recall_ind, unique(recall_ind));
+    multiple = find(nbin > 1);
+    dup_index    = find(ismember(bin, multiple));
+    si_index = setdiff(1:length(recall_ind),dup_index );
+    
+    si_T = HFB_behav_filt{el}(si_index,:);
+    dup_T = HFB_behav_filt{el}(dup_index,:);
+    
+    %find the duplicate pair in dup_T
+    dup_pair = [];
+    for i = 1:height(dup_T)
+        pair = find(dup_T.recall_index == dup_T.recall_index(i))';
+        if pair(1)>pair(2)
+            pair = [pair(2),pair(1)];
+        else
+        end
+        dup_pair = [dup_pair;pair];
+    end
+        dup_pair = unique(dup_pair(:,:),'rows');
+        
+    %merge duplicate pair
+     [center,race,gender,StimulusOnsetTime,RT,test_race,test_gender,test_ans,pa_judg,isCorrect...
+        ,encoding_seq,recall_index,recall_isCorrect,recall_RT...
+        ,certainty,certainty_RT,salience,salience_RT,clean_trial,HFB_zscore] = deal([]);
+    [condNames,condNames2,condNames3,condNames4,condNames5,condNames8,condNames9] = deal(cell(length(dup_pair),1));
+   
+    
+    center = dup_T.center(1:length(dup_pair),:);
+    race = dup_T.race(1:length(dup_pair),:);
+    gender = dup_T.race(1:length(dup_pair),:);
+    for k = 1:length(dup_pair)
+        StimulusOnsetTime(k,:) = mean(dup_T.StimulusOnsetTime(dup_pair(k,:),:));
+        RT(k,:) = mean(dup_T.RT(dup_pair(k,:),:));
+        test_race(k,:) = mean(dup_T.test_race(dup_pair(k,:),:));
+        test_gender(k,:) = mean(dup_T.test_gender(dup_pair(k,:),:));
+        test_ans(k,:) = mean(dup_T.test_ans(dup_pair(k,:),:));
+        pa_judg(k,:) = mean(dup_T.pa_judg(dup_pair(k,:),:));
+        isCorrect(k,:) = mean(dup_T.isCorrect(dup_pair(k,:),:));
+        condNames(k,:) = dup_T.condNames(dup_pair(k,1),:);
+        condNames2(k,:) = dup_T.condNames2(dup_pair(k,1),:);
+        condNames3(k,:) = dup_T.condNames3(dup_pair(k,1),:);
+        condNames4(k,:) = dup_T.condNames4(dup_pair(k,1),:);
+        condNames5(k,:) = dup_T.condNames5(dup_pair(k,1),:);
+        condNames8(k,:) = dup_T.condNames8(dup_pair(k,1),:);
+        condNames9(k,:) = dup_T.condNames9(dup_pair(k,1),:);
+        encoding_seq(k,:) = dup_T.encoding_seq(dup_pair(k,1),:);
+        recall_index(k,:) = mean(dup_T.recall_index(dup_pair(k,:),:));
+        recall_isCorrect(k,:) = mean(dup_T.recall_isCorrect(dup_pair(k,:),:));
+        recall_RT(k,:) = mean(dup_T.recall_RT(dup_pair(k,:),:));
+        certainty(k,:) = mean(dup_T.certainty(dup_pair(k,:),:));
+        certainty_RT(k,:) = mean(dup_T.certainty_RT(dup_pair(k,:),:));
+        salience(k,:) = mean(dup_T.salience(dup_pair(k,:),:));
+        salience_RT(k,:) = mean(dup_T.salience_RT(dup_pair(k,:),:));
+        clean_trial(k,:) = mean(dup_T.clean_trial(dup_pair(k,:),:));
+        HFB_zscore(k,:) = mean(dup_T.HFB_zscore(dup_pair(k,:),:));
+    end
+    dup_T_merge = table(center,race,gender,StimulusOnsetTime,RT,test_race,test_gender,test_ans,pa_judg,isCorrect...
+        ,condNames,condNames2,condNames3,condNames4,condNames5,condNames8,condNames9,encoding_seq,recall_index,recall_isCorrect,recall_RT...
+        ,certainty,certainty_RT,salience,salience_RT,clean_trial,HFB_zscore);
+    
+    HFB_behav_mix{el} = vertcat(dup_T_merge, si_T);
+    
+    
+end
+
+
+HFB_behav_stats = vertcat(HFB_behav_mix{:});
+%1 inclusion
+%% set the index
+encode_correct = (HFB_behav_stats.isCorrect == 1);
+
+race_asian = (HFB_behav_stats.test_race ==1);
+race_black = (HFB_behav_stats.test_race ==2);
+race_white = (HFB_behav_stats.test_race ==3);
+
+%% comparison between correct and incorrect recall with encoding HFB
+recall_correct = (HFB_behav_stats.recall_isCorrect == 1);
+recall_incorrect = (HFB_behav_stats.recall_isCorrect == 0);
+
+idx1 = encode_correct & race_asian & recall_correct;
+idx2 = encode_correct & race_asian & recall_incorrect;
+[h,p,ci,stats] = ttest2(HFB_behav_stats.HFB_zscore(idx1,:),HFB_behav_stats.HFB_zscore(idx2,:))
+
+idx1 = encode_correct & race_black & recall_correct;
+idx2 = encode_correct & race_black & recall_incorrect;
+[h,p,ci,stats] = ttest2(HFB_behav_stats.HFB_zscore(idx1,:),HFB_behav_stats.HFB_zscore(idx2,:))
+
+idx1 = encode_correct & race_white & recall_correct;
+idx2 = encode_correct & race_white & recall_incorrect;
+[h,p,ci,stats] = ttest2(HFB_behav_stats.HFB_zscore(idx1,:),HFB_behav_stats.HFB_zscore(idx2,:))
+%%
+%correlate the RT vs HFB
+idxasian = encode_correct & race_asian;
+idxblack = encode_correct & race_black;
+idxwhite = encode_correct & race_white;
+
+data_corr_1 = cell(1,3);
+data_corr_2 = cell(1,3);
+rho = cell(1,3);
+pval = cell(1,3);
+
+data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_2{1,1} = HFB_behav_stats.RT(idxasian,:);
+[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
+
+data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_2{1,2} = HFB_behav_stats.RT(idxblack,:);
+[rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_2{1,3} = HFB_behav_stats.RT(idxwhite,:);
+[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+figure(1),clf
+for fi = 1:3
+subplot(1,3,fi)
+plot(data_corr_1{1,fi},data_corr_2{1,fi},'kp')
+xlabel('HFB'),ylabel('RT')
+end
+%correlate the recall_RT vs HFB
+idxasian = encode_correct & race_asian;
+idxblack = encode_correct & race_black;
+idxwhite = encode_correct & race_white;
+
+data_corr_1 = cell(1,3);
+data_corr_2 = cell(1,3);
+rho = cell(1,3);
+pval = cell(1,3);
+
+data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_2{1,1} = HFB_behav_stats.recall_RT(idxasian,:);
+[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
+
+data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_2{1,2} = HFB_behav_stats.recall_RT(idxblack,:);
+[rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_2{1,3} = HFB_behav_stats.recall_RT(idxwhite,:);
+[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+figure(1),clf
+for fi = 1:3
+subplot(1,3,fi)
+plot(data_corr_1{1,fi},data_corr_2{1,fi},'kp')
+xlabel('HFB'),ylabel('recall_RT')
+end
+%correlate the certainty vs HFB
+idxasian = encode_correct & race_asian;
+idxblack = encode_correct & race_black;
+idxwhite = encode_correct & race_white;
+
+data_corr_1 = cell(1,3);
+data_corr_2 = cell(1,3);
+rho = cell(1,3);
+pval = cell(1,3);
+
+data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_2{1,1} = HFB_behav_stats.certainty(idxasian,:);
+[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
+
+data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_2{1,2} = HFB_behav_stats.certainty(idxblack,:);
+[rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_2{1,3} = HFB_behav_stats.certainty(idxwhite,:);
+[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+figure(1),clf
+for fi = 1:3
+subplot(1,3,fi)
+plot(data_corr_1{1,fi},data_corr_2{1,fi},'kp')
+xlabel('HFB'),ylabel('certainty')
+end
+%correlate the certainty_RT vs HFB
+idxasian = encode_correct & race_asian;
+idxblack = encode_correct & race_black;
+idxwhite = encode_correct & race_white;
+
+data_corr_1 = cell(1,3);
+data_corr_2 = cell(1,3);
+rho = cell(1,3);
+pval = cell(1,3);
+
+data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_2{1,1} = HFB_behav_stats.certainty_RT(idxasian,:);
+[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
+
+data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_2{1,2} = HFB_behav_stats.certainty_RT(idxblack,:);
+[rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_2{1,3} = HFB_behav_stats.certainty_RT(idxwhite,:);
+[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+figure(1),clf
+for fi = 1:3
+subplot(1,3,fi)
+plot(data_corr_1{1,fi},data_corr_2{1,fi},'kp')
+xlabel('HFB'),ylabel('certainty_RT')
+end
+%correlate the salience vs HFB
+idxasian = encode_correct & race_asian;
+idxblack = encode_correct & race_black;
+idxwhite = encode_correct & race_white;
+
+data_corr_1 = cell(1,3);
+data_corr_2 = cell(1,3);
+rho = cell(1,3);
+pval = cell(1,3);
+
+data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_2{1,1} = HFB_behav_stats.salience(idxasian,:);
+[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
+
+data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_2{1,2} = HFB_behav_stats.salience(idxblack,:);
+[rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_2{1,3} = HFB_behav_stats.salience(idxwhite,:);
+[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+figure(1),clf
+for fi = 1:3
+subplot(1,3,fi)
+plot(data_corr_1{1,fi},data_corr_2{1,fi},'kp')
+xlabel('HFB'),ylabel('salience')
+end
+%correlate the salience_RT vs HFB
+idxasian = encode_correct & race_asian;
+idxblack = encode_correct & race_black;
+idxwhite = encode_correct & race_white;
+
+data_corr_1 = cell(1,3);
+data_corr_2 = cell(1,3);
+rho = cell(1,3);
+pval = cell(1,3);
+
+data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_2{1,1} = HFB_behav_stats.salience_RT(idxasian,:);
+[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
+
+data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_2{1,2} = HFB_behav_stats.salience_RT(idxblack,:);
+[rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_2{1,3} = HFB_behav_stats.salience_RT(idxwhite,:);
+[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+
+figure(1),clf
+for fi = 1:3
+subplot(1,3,fi)
+plot(data_corr_1{1,fi},data_corr_2{1,fi},'kp')
+xlabel('HFB'),ylabel('salience_RT')
+end
+
+
 %% plot figure based on aboving data
 clear h
 load('cdcol.mat')

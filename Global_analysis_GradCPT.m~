@@ -10,12 +10,15 @@ sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';
     ;'C18_45';'C18_46';'C18_47';'C18_49';'C19_50';'C19_51';'C19_52';'C19_53';'C19_55';'C19_58';'C19_60';'C19_62';'S17_114_EB'...
     ;'S17_116_AA';'S17_118_TW';'S19_145_PC';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT'};
 
-%make a specific selection of cohort
-indxcohort = 1:36;%China
-% indxcohort = [37:44];%Stanfordc
-% indxcohort = [1:44];%2 Centers
+
+sbj_names_all_gradCPT = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';'C18_29';'C18_30'...
+    ;'C18_31';'C18_32';'C18_33';'C18_34';'C18_35';'C18_37';'C18_38';'C18_39';'C18_40';'C18_41';'C18_42';'C18_43';'C18_44'...
+    ;'C18_45';'C18_46';'C18_47';'C18_49';'C19_50';'C19_51';'C19_52';'C19_53';'C19_55';'C19_58';'C19_60';'C19_62'};
+
+indxcohort = ismember(sbj_names_all,sbj_names_all_gradCPT);
 
 sbj_names = sbj_names_all(indxcohort);%China
+
 
 
 % define the the abbreviations of kinds of brian structures
