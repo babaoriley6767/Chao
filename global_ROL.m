@@ -118,7 +118,6 @@ for i = 1:size(T3,1)
 end
 loc=cellfun('isempty', T3{:,'anat'} );
 T3(loc,:)=[];
-d
 % % s = rng;
 % rand37 = randperm(24,7);
 % T3.anat{7} = T3.anat{7}(rand37);
@@ -150,7 +149,7 @@ end
 
 stats_data = cell(1,length(conditions));
 stats_data_all = cell(1,length(conditions));
-for i = 1:length(T3.Properties.RowNames)
+for i = 3:length(T3.Properties.RowNames)
     if ~isempty(T3.anat{i})
         indx = i;
         sbj_name = T3.Properties.RowNames{indx};%set basic pipeline parameters
@@ -276,9 +275,9 @@ end
 
 %%
 %Sites for which a ROL value could not be obtained in 50% of the trials or more were discarded from the analysis.
-
+% range first 50% second place
 %take care of the time rage
-twin = [0.01 1];%[0.1 1]
+twin = [0.1 1];%[0.1 1]
 for elec_inspect = 1: length(channame)
     for ci = 1:length(conditions)
         ROL.(conditions{ci}).onsets{elec_inspect}(ROL.(conditions{ci}).onsets{elec_inspect} < twin(1) | ROL.(conditions{ci}).onsets{elec_inspect} > twin(2)) = nan;
