@@ -100,14 +100,23 @@ conditions = {'asian','black','white'}; column = 'condNames';
 ROL_params = genROLParams_NC(project_name);% set the parameters
 ROL_params.range = [0.1 1];% ROL time range
 ROL_params.ratio = 0.5; % percentage of ROL NaN
-% HFB parameters
-% fixed HFB column
-HFB.fix_range = [0 1];                
-% buffer HFB column
-HFB.buffer_range = [0 .5;.1 .6;.2 .7;.3 .8;.4 .9;.5 1];              
 % ROL-wise HFB
 HFB.ROL_onsets = [0 .5];
 HFB.ROL_peaks = [.15 .15];
+
+% HFB parameters
+tw_series = 1:10;%this is where to adjust
+tw_HFB = 0:0.1:1;
+HFB.range = [];
+for i = 1:length(tw_series)
+buffer_mitrx = buffer(tw_HFB,tw_series(i)+1,tw_series(i),'nodelay');
+HFB_range_loop = [buffer_mitrx(1,:);buffer_mitrx(end,:)]';
+HFB.range = [HFB.range; HFB_range_loop];
+end
+disp('the following is the HFB range we use' );
+disp(num2str(HFB.range));
+            
+
 %% Horizontally prepare the data
 %creat a cell with N tables,each table has the HFB zscore and behav data
 HFB_behav = cell(1,length(channame));
@@ -168,8 +177,14 @@ for i = 1:length(T3.Properties.RowNames)%loop across patients
             else
                 elec = sum(cellfun(@numel,T3.anat(1:(i-1))))+j;
             end
-                % step 1 horizontally concat the recall trialinfo
+            
+                % step 1 horizontally concat the ID info and move it to the
+                % second column
                 HFB_behav{elec} = trialinfo_encode.trialinfo;
+                HFB_behav{elec}.channame(1:108,:) = {deal(channame{elec})};
+                HFB_behav{elec}=[HFB_behav{elec}(:,1) HFB_behav{elec}(:,18) HFB_behav{elec}(:,2:17)];
+                
+                % step 2 horizontally concat the recall trialinfo
                 HFB_behav{elec}.encoding_seq = trialinfo_recall_raw.seq.active.race;
                 HFB_behav{elec}.recall_index = recall_index;
                 HFB_behav{elec}.recall_isCorrect = trialinfo_recall.trialinfo.isCorrect(recall_index,:);
@@ -180,7 +195,7 @@ for i = 1:length(T3.Properties.RowNames)%loop across patients
                 HFB_behav{elec}.salience_RT = trialinfo_recall.trialinfo.pa_RT_salience(recall_index,:);
                 HFB_behav{elec}.clean_trial = clean_trial;
                 
-                % step 2 horizontally concat the ROL data
+                % step 3 horizontally concat the ROL data
                 fs = data_all.fsample; % sampling rate
                 stimtime = 0;% time 0
                 stiminds = find(data_all.time>stimtime,1); % indx of time 0
@@ -231,23 +246,11 @@ for i = 1:length(T3.Properties.RowNames)%loop across patients
                         disp(['there are enought ROL peaks  in condition ' conditions{cond} ' in site ' channame{elec,:} ' more than ' num2str(ROL_params.ratio*100) '%'])
                     end
                 end
+               
                 
-                
-                % step 3 horizontally concat the HFB
-                % HFB in a fixed range
-                HFB_timewindow = HFB.fix_range;
-                HFB_range = dsearchn(data_all.time',HFB_timewindow');
-                HFB_behav{elec}.HFB = mean(data_all.wave(:,HFB_range(1):HFB_range(2)),2);
-                HFB_behav{elec}.Properties.VariableNames{'HFB'} = 'fix_range';
-                % HFB from a buffer series
-                HFB_range = HFB.buffer_range;
-                for h = 1:size(HFB_range,1)
-                    HFB_timewindow = HFB.buffer_range(h,:);
-                    HFB_range = dsearchn(data_all.time',HFB_timewindow');
-                    HFB_behav{elec}.HFB = mean(data_all.wave(:,HFB_range(1):HFB_range(2)),2);
-                    HFB_behav{elec}.Properties.VariableNames{'HFB'} = ['buffer range ' num2str(HFB.buffer_range(h,:))];
-                end
-                 % HFB based on ROL_onsets
+                % step 4.1 horizontally concat HFB based on
+                % ROL_onsets/ROL_peaks
+                formatSpec = '%.2f';
                 for t = 1:108
                     if isnan(HFB_behav{elec}.ROL_onsets(t))
                         HFB_behav{elec}.HFB(t) = NaN;
@@ -262,8 +265,8 @@ for i = 1:length(T3.Properties.RowNames)%loop across patients
                     HFB_range = dsearchn(data_all.time',HFB_timewindow');
                     HFB_behav{elec}.HFB(t) = mean(data_all.wave(t,HFB_range(1):HFB_range(2)),2);
                 end
-                HFB_behav{elec}.Properties.VariableNames{'HFB'} = ['ROL onset HFB ' num2str(HFB.ROL_onsets(2))];
-                % HFB based on ROL_peaks
+                HFB_behav{elec}.Properties.VariableNames{'HFB'} = ['ROL onset HFB ' num2str(HFB.ROL_onsets(1),formatSpec) '~' num2str(HFB.ROL_onsets(2),formatSpec)];
+               
                 for t = 1:108
                     if isnan(HFB_behav{elec}.ROL_peaks(t))
                         HFB_behav{elec}.HFB(t) = NaN;
@@ -283,10 +286,17 @@ for i = 1:length(T3.Properties.RowNames)%loop across patients
                     HFB_range = dsearchn(data_all.time',HFB_timewindow');
                     HFB_behav{elec}.HFB(t) = mean(data_all.wave(t,HFB_range(1):HFB_range(2)),2);
                 end
-                HFB_behav{elec}.Properties.VariableNames{'HFB'} = ['ROL peaks HFB from ' num2str(HFB.ROL_onsets(1)) ' to ' num2str(HFB.ROL_onsets(2))];
+                HFB_behav{elec}.Properties.VariableNames{'HFB'} = ['ROL peaks HFB from -' num2str(HFB.ROL_peaks(1),formatSpec) ' to ' num2str(HFB.ROL_peaks(2),formatSpec)];
                 
-             % step 4 horizontally concat the ID info
-                HFB_behav{elec}.channame(1:108,:) = {deal(channame{elec})};
+                
+                % step 4.2 horizontally concat the HFB with different range
+                for h = 1:size(HFB.range,1)
+                    HFB_timewindow = HFB.range(h,:);
+                    HFB_range = dsearchn(data_all.time',HFB_timewindow');
+                    HFB_behav{elec}.HFB = mean(data_all.wave(:,HFB_range(1):HFB_range(2)),2);
+                    HFB_behav{elec}.Properties.VariableNames{'HFB'} = ['HFB ' num2str(HFB.range(h,1),formatSpec) '~' num2str(HFB.range(h,2),formatSpec)];
+                end
+             
         end
     else
     end
@@ -326,62 +336,49 @@ for el = 1:length(channame)
         dup_pair = unique(dup_pair(:,:),'rows');
         
     %merge duplicate pair
-    [v01,v02,v03,v04,v05,v06,v07,v08,v09,v10...
-     ,v18,v19,v20,v21,v22,v23,v24...
-     ,v25,v26,v27,v28,v29,v30,v31,v32,v33,v34,v35,v36,v37]= deal([]);
- 
-    [v11,v12,v13,v14,v15,v16,v17,v38] = deal(cell(length(dup_pair),1));
+    T_loop1 = [1,2,12:18];% column in the table that is cell or str
+    T_loop2 = [3:11,19:size(HFB_behav{1},2)];% column in the table that is number
     
-    for k = 1:length(dup_pair)
-        v01(k,:) = dup_T{:,1}(dup_pair(k,1),:);
-        v02(k,:) = nanmean(dup_T{:,2}(dup_pair(k,:),:));
-        v03(k,:) = nanmean(dup_T{:,3}(dup_pair(k,:),:));
-        v04(k,:) = nanmean(dup_T{:,4}(dup_pair(k,:),:));
-        v05(k,:) = nanmean(dup_T{:,5}(dup_pair(k,:),:));
-        v06(k,:) = nanmean(dup_T{:,6}(dup_pair(k,:),:));
-        v07(k,:) = nanmean(dup_T{:,7}(dup_pair(k,:),:));
-        v08(k,:) = nanmean(dup_T{:,8}(dup_pair(k,:),:));
-        v09(k,:) = nanmean(dup_T{:,9}(dup_pair(k,:),:));
-        v10(k,:) = nanmean(dup_T{:,10}(dup_pair(k,:),:));
-        v11(k,:) = dup_T{:,11}(dup_pair(k,1),:);
-        v12(k,:) = dup_T{:,12}(dup_pair(k,1),:);
-        v13(k,:) = dup_T{:,13}(dup_pair(k,1),:);
-        v14(k,:) = dup_T{:,14}(dup_pair(k,1),:);
-        v15(k,:) = dup_T{:,15}(dup_pair(k,1),:);
-        v16(k,:) = dup_T{:,16}(dup_pair(k,1),:);
-        v17(k,:) = dup_T{:,17}(dup_pair(k,1),:);
-        v18(k,:) = dup_T{:,18}(dup_pair(k,1),:);
-        v19(k,:) = nanmean(dup_T{:,19}(dup_pair(k,:),:));
-        v20(k,:) = nanmean(dup_T{:,20}(dup_pair(k,:),:));
-        v21(k,:) = nanmean(dup_T{:,21}(dup_pair(k,:),:));
-        v22(k,:) = nanmean(dup_T{:,22}(dup_pair(k,:),:));
-        v23(k,:) = nanmean(dup_T{:,23}(dup_pair(k,:),:));
-        v24(k,:) = nanmean(dup_T{:,24}(dup_pair(k,:),:));
-        v25(k,:) = nanmean(dup_T{:,25}(dup_pair(k,:),:));
-        v26(k,:) = nanmean(dup_T{:,26}(dup_pair(k,:),:));
-        v27(k,:) = nanmean(dup_T{:,27}(dup_pair(k,:),:));
-        v28(k,:) = nanmean(dup_T{:,28}(dup_pair(k,:),:));
-        v29(k,:) = nanmean(dup_T{:,29}(dup_pair(k,:),:));
-        v30(k,:) = nanmean(dup_T{:,30}(dup_pair(k,:),:));
-        v31(k,:) = nanmean(dup_T{:,31}(dup_pair(k,:),:));
-        v32(k,:) = nanmean(dup_T{:,32}(dup_pair(k,:),:));
-        v33(k,:) = nanmean(dup_T{:,33}(dup_pair(k,:),:));
-        v34(k,:) = nanmean(dup_T{:,34}(dup_pair(k,:),:));
-        v35(k,:) = nanmean(dup_T{:,35}(dup_pair(k,:),:));
-        v36(k,:) = nanmean(dup_T{:,36}(dup_pair(k,:),:));
-        v37(k,:) = nanmean(dup_T{:,37}(dup_pair(k,:),:));
-        v38(k,:) = dup_T{:,38}(dup_pair(k,1),:);
+%     v1 = [];
+%     for i = 1:length(T_loop1)
+%         eval(sprintf('v%d = deal(cell(length(dup_pair),1))', T_loop1(i)))
+%     end
+%     
+%     for i = 1:length(T_loop2)
+%         eval(sprintf('v%d = deal([])', T_loop2(i)))
+%     end
+        
+
+    for k = 1:length(dup_pair)% loop through the duplicated row
+        for i = 1:size(HFB_behav{1},2)% loop through the column
+            if ismember(i,T_loop1)
+                eval(sprintf('v%d(%d,:) = dup_T{:,%d}(dup_pair(%d,1),:);',i,k,i,k))
+            elseif ismember(i,T_loop2)
+                eval(sprintf('v%d(%d,:) = nanmean(dup_T{:,%d}(dup_pair(%d,:),:));',i,k,i,k))
+            else
+            end
+        end
     end
     
-    dup_T_merge = table(v01,v02,v03,v04,v05,v06,v07,v08,v09,v10,v11,v12...
-     ,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24...
-     ,v25,v26,v27,v28,v29,v30,v31,v32,v33,v34,v35,v36,v37,v38);
+    val_names = [];
+    for i = 1:size(HFB_behav{1},2)
+         val_names = [val_names sprintf('v%d,',i)];
+    end
+    val_names(end) = [];
+    
+    eval(['dup_T_merge = table(' val_names ');']);
 
     dup_T_merge.Properties.VariableNames = dup_T.Properties.VariableNames;
  
     HFB_behav_mix{el} = vertcat(dup_T_merge, si_T);
 end
     HFB_behav_stats = vertcat(HFB_behav_mix{:});
+    
+    
+    
+    
+    
+    
 %% set the index
 encode_correct = (HFB_behav_stats.isCorrect == 1);
 
@@ -656,3 +653,194 @@ group = [group_asian;group_black;group_white];
 [p1,tbl1,stats1] = anova1(data_anova,group);
 std1 = [nanstd(data_asian),nanstd(data_black ),nanstd(data_white)];
 m1 = multcompare(stats1,'ctype','lsd')
+
+
+%%
+
+encode_correct = (HFB_behav_stats.isCorrect == 1);
+
+race_asian = (HFB_behav_stats.test_race ==1);
+race_black = (HFB_behav_stats.test_race ==2);
+race_white = (HFB_behav_stats.test_race ==3);
+
+idxasian = encode_correct & race_asian;
+idxblack = encode_correct & race_black;
+idxwhite = encode_correct & race_white;
+
+
+data_asian = [HFB_behav_stats.recall_RT(idxasian,:) HFB_behav_stats{:,32:end}(idxasian,:)];
+data_black = [HFB_behav_stats.recall_RT(idxblack,:) HFB_behav_stats{:,32:end}(idxblack,:)];
+data_white = [HFB_behav_stats.recall_RT(idxwhite,:) HFB_behav_stats{:,32:end}(idxwhite,:)];
+
+
+
+
+[dataCovMat,datap] = corr(data_asian);
+figure(3), clf
+imagesc(dataCovMat)
+axis image
+set(gca,'clim',[-1 1])
+title('Data covariance matrix')
+xlabel('xx')
+
+ylabel('??')
+for i=1:size(datap,1)
+    for j=1:size(datap,2)
+        text(1,j,num2str(round(datap(1,j),2)),'HorizontalAlignment','center','fontsize',15)
+    end
+end
+
+[dataCovMat,datap]= corr(data_black);
+figure(4), clf
+imagesc(dataCovMat)
+axis image
+set(gca,'clim',[-1 1])
+title('Data covariance matrix')
+xlabel('??')
+ylabel('??')
+    for j=1:size(datap,2)
+        text(1,j,num2str(round(datap(1,j),2)),'HorizontalAlignment','center','fontsize',15)
+    end
+
+[dataCovMat,datap]= corr(data_white);
+figure(5), clf
+imagesc(dataCovMat)
+axis image
+set(gca,'clim',[-1 1])
+title('Data covariance matrix')
+xlabel('??')
+ylabel('??')
+    for j=1:size(datap,2)
+        text(1,j,num2str(round(datap(1,j),2)),'HorizontalAlignment','center','fontsize',15)
+    end
+
+
+
+data_corr_1{1,1} = HFB_behav_stats{:,31}(idxasian,:);
+data_corr_2{1,1} = HFB_behav_stats.salience_RT(idxasian,:);
+[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
+
+%%
+% a clear MATLAB workspace is a clear mental workspace
+close all; clear; clc
+
+%% simulate data
+
+% simulation parameters
+N = 1000;     % time points
+M =   20;     % channels
+
+% time vector (radian units)
+t = linspace(0,6*pi,N);
+
+% relationship across channels (imposing covariance)
+chanrel = sin(linspace(0,2*pi,M))';
+
+% create the data
+data = bsxfun(@times,repmat( sin(t),M,1 ),chanrel);
+data = data + randn(M,N);
+
+% two ways of visualizing the multichannel data
+figure(1), clf
+plot(t,bsxfun(@plus,data,(1:M)'*4))
+set(gca,'ytick',[],'xlim',t([1 end]))
+xlabel('Time (a.u.)')
+ylabel('Channel')
+
+figure(2), clf
+imagesc(t,[],data)
+xlabel('Time (a.u.)')
+ylabel('Channel')
+set(gca,'clim',[-1 1]*2)
+
+%% now compute the covariance matrix
+
+% note the size of the output!
+dataCovMat = cov(data');
+
+figure(3), clf
+imagesc(dataCovMat)
+axis image
+set(gca,'clim',[-1 1]*.5)
+title('Data covariance matrix')
+xlabel('??')
+ylabel('??')
+
+%% and now the correlation matrix
+
+% note the size of the output!
+dataCorrMat = corrcoef(data');
+
+figure(4), clf
+imagesc(dataCorrMat)
+axis image
+set(gca,'clim',[-1 1]*.5)
+title('Data correlation matrix')
+xlabel('??')
+ylabel('??')
+
+% a clear MATLAB workspace is a clear mental workspace
+close all; clear; clc
+
+%% the example from the video
+
+% raw correlations
+rmg = .7;
+rsg = .8;
+rms = .9;
+
+% partial correlations
+rho_mg_s = (rmg - rsg*rms) / ( sqrt(1-rsg^2)*sqrt(1-rms^2) )
+rho_sg_m = (rsg - rmg*rms) / ( sqrt(1-rmg^2)*sqrt(1-rms^2) )
+
+%% now for datasets
+
+N = 76;
+
+% correlated datasets
+x1 = linspace(1,10,N)' + randn(N,1);
+x2 = x1 + randn(N,1);
+x3 = 0*x1 + randn(N,1);
+
+
+% compute the "raw" correlation matrix
+[cormatR,cormatP] = corr([x1 x2 x3]);
+
+% inspect some partial correlations
+partialcorr(x2,x3,x1)
+
+%% visualize
+
+figure(1), clf
+
+% raw correlations
+subplot(121)
+imagesc(cormatR), axis square
+set(gca,'clim',[-1 1],'xtick',1:3,'ytick',1:3)
+xlabel('Channels'), ylabel('Channels')
+title('Raw correlation matrix')
+
+% add text correlation values
+for i=1:3
+    for j=1:3
+        text(i,j,num2str(round(cormatR(i,j),2)),'HorizontalAlignment','center','fontsize',15)
+    end
+end
+
+
+
+% partial correlations
+parcormat = partialcorr([x1 x2 x3]);
+
+subplot(122)
+imagesc(parcormat), axis square
+set(gca,'clim',[-1 1],'xtick',1:3,'ytick',1:3)
+xlabel('Channels'), ylabel('Channels')
+title('Partial correlation matrix')
+
+% add text correlation values
+[I,J] = meshgrid(1:3);
+text(I(:),J(:),num2str(round(parcormat(:),2)),'HorizontalAlignment','center','FontSize',15)
+
+%% done.
+

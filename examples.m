@@ -208,8 +208,8 @@ g(1,2).stat_glm();
 g(1,2).set_title('stat_glm()');
 
 %Custom fit with provided function
-g(1,3).stat_fit('fun',@(a,b,c,x)a./(x+b)+c,'intopt','functional');
-g(1,3).set_title('stat_fit(''fun'',@(a,b,c,x)a./(x+b)+c)');
+% g(1,3).stat_fit('fun',@(a,b,c,x)a./(x+b)+c,'intopt','functional');
+% g(1,3).set_title('stat_fit(''fun'',@(a,b,c,x)a./(x+b)+c)');
 
 %Spline smoothing
 g(2,1).stat_smooth();
@@ -930,7 +930,7 @@ g.axe_property('TickDir','out','XGrid','on','Ygrid','on','GridColor',[0.5 0.5 0.
 %Draw the news elements
 g.draw();
 
-
+%chao
 %% Use custom layouts in gramm, marginal histogram example
 
 

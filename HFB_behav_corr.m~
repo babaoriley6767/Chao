@@ -67,7 +67,7 @@ disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-[channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');
+[channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');    
 %% manully choose one site in each patients
 if strcmp(anat_name,'INSULA')
     channame = channame([1,2,5,6],:);
@@ -106,7 +106,7 @@ HFB.fix_range = [0 1];
 % buffer HFB column
 HFB.buffer_range = [0 .5;.1 .6;.2 .7;.3 .8;.4 .9;.5 1];              
 % ROL-wise HFB
-HFB.ROL_onsets = [0 .4];
+HFB.ROL_onsets = [0 .5];
 HFB.ROL_peaks = [.15 .15];
 %% Horizontally prepare the data
 %creat a cell with N tables,each table has the HFB zscore and behav data
@@ -398,6 +398,10 @@ recall_incorrect = (HFB_behav_stats.recall_isCorrect == 0);
 %% comparison between correct and incorrect recall with encoding HFB
 idx1 = encode_correct & race_asian & recall_correct;
 idx2 = encode_correct & race_asian & recall_incorrect;
+
+idx1 = recall_correct;
+idx2 = recall_incorrect;
+
 [h,p,ci,stats] = ttest2(HFB_behav_stats{:,30}(idx1,:),HFB_behav_stats{:,30}(idx2,:))
 
 idx1 = encode_correct & race_black & recall_correct;
@@ -458,17 +462,17 @@ data_corr_2 = cell(1,3);
 rho = cell(1,3);
 pval = cell(1,3);
 
-data_corr_1{1,1} = HFB_behav_stats{:,36}(idxasian,:);
+data_corr_1{1,1} = HFB_behav_stats{:,30}(idxasian,:);
 data_corr_2{1,1} = HFB_behav_stats.recall_RT(idxasian,:);
 [rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
 
-data_corr_1{1,2} = HFB_behav_stats{:,36}(idxblack,:);
+data_corr_1{1,2} = HFB_behav_stats{:,30}(idxblack,:);
 data_corr_2{1,2} = HFB_behav_stats.recall_RT(idxblack,:);
 [rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
 
-data_corr_1{1,3} = HFB_behav_stats{:,36}(idxwhite,:);
+data_corr_1{1,3} = HFB_behav_stats{:,30}(idxwhite,:);
 data_corr_2{1,3} = HFB_behav_stats.recall_RT(idxwhite,:);
-[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+[rho{3},pval{3}] = corr(data_corr_1{1,3},data_corr_2{1,3});
 
 figure(1),clf
 for fi = 1:3
@@ -476,6 +480,8 @@ subplot(1,3,fi)
 plot(data_corr_1{1,fi},data_corr_2{1,fi},'kp')
 xlabel('HFB'),ylabel('recall_RT')
 end
+
+
 %correlate the certainty vs HFB
 idxasian = encode_correct & race_asian;
 idxblack = encode_correct & race_black;
@@ -486,17 +492,17 @@ data_corr_2 = cell(1,3);
 rho = cell(1,3);
 pval = cell(1,3);
 
-data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_1{1,1} = HFB_behav_stats{:,31}(idxasian,:);
 data_corr_2{1,1} = HFB_behav_stats.certainty(idxasian,:);
-[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
+[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1},'type','p');
 
-data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_1{1,2} = HFB_behav_stats{:,31}(idxblack,:);
 data_corr_2{1,2} = HFB_behav_stats.certainty(idxblack,:);
-[rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+[rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2},'type','p');
 
-data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_1{1,3} = HFB_behav_stats{:,31}(idxwhite,:);
 data_corr_2{1,3} = HFB_behav_stats.certainty(idxwhite,:);
-[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2},'type','p');
 
 figure(1),clf
 for fi = 1:3
@@ -514,17 +520,17 @@ data_corr_2 = cell(1,3);
 rho = cell(1,3);
 pval = cell(1,3);
 
-data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_1{1,1} = HFB_behav_stats{:,31}(idxasian,:);
 data_corr_2{1,1} = HFB_behav_stats.certainty_RT(idxasian,:);
 [rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
 
-data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_1{1,2} = HFB_behav_stats{:,31}(idxblack,:);
 data_corr_2{1,2} = HFB_behav_stats.certainty_RT(idxblack,:);
 [rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
 
-data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_1{1,3} = HFB_behav_stats{:,31}(idxwhite,:);
 data_corr_2{1,3} = HFB_behav_stats.certainty_RT(idxwhite,:);
-[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+[rho{3},pval{3}] = corr(data_corr_1{1,3},data_corr_2{1,3});
 
 figure(1),clf
 for fi = 1:3
@@ -542,17 +548,17 @@ data_corr_2 = cell(1,3);
 rho = cell(1,3);
 pval = cell(1,3);
 
-data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_1{1,1} = HFB_behav_stats{:,31}(idxasian,:);
 data_corr_2{1,1} = HFB_behav_stats.salience(idxasian,:);
 [rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
 
-data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_1{1,2} = HFB_behav_stats{:,31}(idxblack,:);
 data_corr_2{1,2} = HFB_behav_stats.salience(idxblack,:);
 [rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
 
-data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_1{1,3} = HFB_behav_stats{:,31}(idxwhite,:);
 data_corr_2{1,3} = HFB_behav_stats.salience(idxwhite,:);
-[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+[rho{3},pval{3}] = corr(data_corr_1{1,3},data_corr_2{1,3});
 
 figure(1),clf
 for fi = 1:3
@@ -570,17 +576,17 @@ data_corr_2 = cell(1,3);
 rho = cell(1,3);
 pval = cell(1,3);
 
-data_corr_1{1,1} = HFB_behav_stats.HFB_zscore(idxasian,:);
+data_corr_1{1,1} = HFB_behav_stats{:,31}(idxasian,:);
 data_corr_2{1,1} = HFB_behav_stats.salience_RT(idxasian,:);
 [rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1});
 
-data_corr_1{1,2} = HFB_behav_stats.HFB_zscore(idxblack,:);
+data_corr_1{1,2} = HFB_behav_stats{:,31}(idxblack,:);
 data_corr_2{1,2} = HFB_behav_stats.salience_RT(idxblack,:);
 [rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2});
 
-data_corr_1{1,3} = HFB_behav_stats.HFB_zscore(idxwhite,:);
+data_corr_1{1,3} = HFB_behav_stats{:,31}(idxwhite,:);
 data_corr_2{1,3} = HFB_behav_stats.salience_RT(idxwhite,:);
-[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+[rho{3},pval{3}] = corr(data_corr_1{1,3},data_corr_2{1,3});
 
 figure(1),clf
 for fi = 1:3
@@ -612,7 +618,7 @@ data_corr_2{1,2} = HFB_behav_stats{:,36}(idxblack,:);
 
 data_corr_1{1,3} = HFB_behav_stats.ROL_onsets(idxwhite,:);
 data_corr_2{1,3} = HFB_behav_stats{:,36}(idxwhite,:);
-[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2});
+[rho{3},pval{3}] = corr(data_corr_1{1,3},data_corr_2{1,3});
 
 figure(1),clf
 for fi = 1:3
