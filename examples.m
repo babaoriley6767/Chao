@@ -16,6 +16,7 @@ g=gramm('x',cars.Model_Year,'y',cars.MPG,'color',cars.Cylinders,'subset',cars.Cy
 %%% 
 % Subdivide the data in subplots horizontally by region of origin using
 % facet_grid()
+
 g.facet_grid([],cars.Origin_Region);
 %%%
 % Plot raw data as points

@@ -149,7 +149,7 @@ end
 
 stats_data = cell(1,length(conditions));
 stats_data_all = cell(1,length(conditions));
-for i = 3:length(T3.Properties.RowNames)
+for i = 1:length(T3.Properties.RowNames)
     if ~isempty(T3.anat{i})
         indx = i;
         sbj_name = T3.Properties.RowNames{indx};%set basic pipeline parameters
@@ -372,8 +372,14 @@ m1 = multcompare(stats1,'ctype','lsd')
 
 %stats across trials
 data_asian = horzcat(ROL.asian.onsets_lit{:,:})';
+data_asian = data_asian(~isnan(data_asian));
+
 data_black = horzcat(ROL.black.onsets_lit{:,:})';
+data_black = data_black(~isnan(data_black));
+
 data_white = horzcat(ROL.white.onsets_lit{:,:})';
+data_white = data_white(~isnan(data_white));
+
 data_anova = [data_asian;data_black;data_white]';
 group_asian = repmat({'asian'},size(data_asian,1),1);
 group_black = repmat({'black'},size(data_black,1),1);
@@ -383,6 +389,8 @@ group = [group_asian;group_black;group_white];
 [p1,tbl1,stats1] = anova1(data_anova,group);
 std1 = [nanstd(data_asian),nanstd(data_black ),nanstd(data_white)];
 m1 = multcompare(stats1,'ctype','lsd')
+
+
 %%
 save('Race_ROL_group_diff_dlPFC.mat','ROL');
 %%
