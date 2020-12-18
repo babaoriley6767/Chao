@@ -319,4 +319,4 @@ end
 %%
 data_time = data_all.time;
 save('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/mat_files/group_diff_encoding_HFB_reall_behav_sheet.mat','HFB_behav','HFB_params','plot_params','ROL_params','stats_params','data_time')
-save('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/mat_files/S20_158_block3.mat','HFB_behav','HFB_params','plot_params','ROL_params','stats_params','data_time')
+save('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/mat_files/S20_158_block1.mat','HFB_behav','HFB_params','plot_params','ROL_params','stats_params','data_time')

@@ -66,7 +66,7 @@ disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-[channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');    
+[channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'any_activation','none');    
 %% display info of behav data
 behv = readtable(['/Users/chao/Desktop/Project_in_Stanford/01_RACE/4_working_data/Behavioral_accuracy/results_summary.xlsx']);
 behv_indx = ismember(behv.Chao_patient_ID_in_server,T3.Properties.RowNames);
