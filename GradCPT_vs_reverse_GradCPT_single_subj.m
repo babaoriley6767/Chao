@@ -41,7 +41,7 @@ load([dirs.data_root,filesep,'OriginalData',filesep,sbj_name,filesep,'global_',p
 for i = 1:length(globalVar.channame)
     
     
-    data_all = concatBlocks(sbj_name, block_names,dirs,[i],'HFB','Band',{'wave'},['stimlock']);%'stimlock_bl_corr'
+    data_all = concatBlocks(sbj_name, block_names,dirs,[81],'HFB','Band',{'wave'},['stimlock']);%'stimlock_bl_corr'
     %smooth is in the trial level
     winSize = floor(data_all.fsample*plot_params.sm);
     gusWin = gausswin(winSize)/sum(gausswin(winSize));
@@ -68,7 +68,7 @@ for i = 1:length(globalVar.channame)
     
     
     
-    data_all_r = concatBlocks(sbj_name, block_names_r,dirs_r,[i],'HFB','Band',{'wave'},['stimlock']);%'stimlock_bl_corr'
+    data_all_r = concatBlocks(sbj_name, block_names_r,dirs_r,[81],'HFB','Band',{'wave'},['stimlock']);%'stimlock_bl_corr'
     %smooth is in the trial level
     winSize = floor(data_all_r.fsample*plot_params.sm);
     gusWin = gausswin(winSize)/sum(gausswin(winSize));
@@ -192,6 +192,11 @@ set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 %legend off
 % set(gca,'XLabel','Time(S)');%chao
 xlabel('Time(S)')
+
+%get rid of the upper and right axis
+set(gca, 'box', 'off')
+
+
 
 suptitle([data_all.label])
 
