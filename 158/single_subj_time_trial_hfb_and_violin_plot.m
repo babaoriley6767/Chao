@@ -98,7 +98,7 @@ ROL_onset_SRvsOR = cell(1,2);
 time_range = dsearchn(data_all.time',[0 1]');
 
 % randomly pick half of the other_races with fixed rng
-if strcmp(block_names,'E20-1163_0052')
+if strcmp(block_names,'E20-1163_0052')||strcmp(block_names,'E20-1163_0091')
     rng('default');
     
     half_index_black = sort(randsample(size(grouped_trials{2},1),round(size(grouped_trials{2},1)/2)));
@@ -191,17 +191,23 @@ contourf(data_all.time(time_range(1):time_range(2)),size(data_SR,1):-1:1,data_SR
 set(gca,'clim',[-1.5 1.5])
 hold on
 plot(ROL_SR,size(data_SR,1):-1:1,'k--','LineWidth',4.5)
-title('Time-Trial-HFB plot, sorted by ROL onset, SR')
-colorbar
+title('SR, Time-Trial-HFB plot, sorted by ROL')
+set(gca,'fontsize',18)
+ylabel('trials')
+h = colorbar;
+ylabel(h, 'HFB Z-score')
 
 subplot(2,1,2)
 contourf(data_all.time(time_range(1):time_range(2)),size(data_OR,1):-1:1,data_OR,40,'linecolor','none')
 set(gca,'clim',[-1.5 1.5])
 hold on
 plot(ROL_OR,size(data_OR,1):-1:1,'k--','LineWidth',4.5)
-title('Time-Trial-HFB plot, sorted by ROL onset, OR')
-colorbar
-
+title('OR, Time-Trial-HFB plot, sorted by ROL')
+set(gca,'fontsize',18)
+ylabel('trials')
+xlabel('times(S)')
+h = colorbar;
+ylabel(h, 'HFB Z-score')
 
 
 %MannWhitney test
@@ -221,7 +227,7 @@ g(1,1).stat_violin('fill','transparent');
 g(1,1).set_title('stat_violin()');
 
 g(1,1)=gramm('x',data_groups,'y',data_stats,'color',data_groups);
-g(1,1).set_names('x',[],'y','ROL','color','Origin');
+g(1,1).set_names('x',[],'y','ROL(S)','color','Origin');
 g(1,1).stat_violin('normalization','area','dodge',0,'fill','edge');
 g(1,1).stat_boxplot('width',0.2);
 g(1,1).set_color_options('map',plot_params.col);

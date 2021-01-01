@@ -27,6 +27,7 @@ plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 2
 stats_params = genStatsParams(project_name);
 plot_params.single_trial = false;
 plot_params.clust_per = true;% clusterd based permuation
+plot_params.rand_other_race = false;
 %%
 %make a specific selection of conditions and coloring
 conditions = {'asian','black','white'}; column = 'condNames';
@@ -102,7 +103,7 @@ stats_data_all_SRvsOR = cell(1,2);
 % randomly pick half of the other_races with fixed rng
 if strcmp(block_names,'E20-1163_0052')
     rng('default');
-    
+    if plot_params.rand_other_race
     half_index_black = randsample(size(plot_data{2},1),round(size(plot_data{2},1)/2));
     half_index_white = randsample(size(plot_data{3},1),round(size(plot_data{3},1)/2));
     plot_data_SRvsOR{1} = plot_data{1};
@@ -110,25 +111,27 @@ if strcmp(block_names,'E20-1163_0052')
     stats_data_SRvsOR{1} = stats_data{1};
     stats_data_SRvsOR{2} = [stats_data{2}(half_index_black,:);stats_data{3}(half_index_white,:)];
     
-
-%     plot_data_SRvsOR{1} = plot_data{1};
-%     plot_data_SRvsOR{2} = [plot_data{2};plot_data{3}];
-%     stats_data_SRvsOR{1} = stats_data{1};
-%     stats_data_SRvsOR{2} = [stats_data{2};stats_data{3}];
+    else
+    plot_data_SRvsOR{1} = plot_data{1};
+    plot_data_SRvsOR{2} = [plot_data{2};plot_data{3}];
+    stats_data_SRvsOR{1} = stats_data{1};
+    stats_data_SRvsOR{2} = [stats_data{2};stats_data{3}];
+    end
 elseif strcmp(block_names,'E20-1163_0106')
     rng('default');
-    
+    if plot_params.rand_other_race
     half_index_asian = randsample(size(plot_data{1},1),round(size(plot_data{1},1)/2));
     half_index_black = randsample(size(plot_data{2},1),round(size(plot_data{2},1)/2));
     plot_data_SRvsOR{1} = plot_data{3};
     plot_data_SRvsOR{2} = [plot_data{1}(half_index_asian,:);plot_data{2}(half_index_black,:)];
     stats_data_SRvsOR{1} = stats_data{3};
     stats_data_SRvsOR{2} = [stats_data{1}(half_index_asian,:);stats_data{2}(half_index_black,:)];
-    
-%     plot_data_SRvsOR{1} = plot_data{3};
-%     plot_data_SRvsOR{2} = [plot_data{1};plot_data{2}];
-%     stats_data_SRvsOR{1} = stats_data{3};
-%     stats_data_SRvsOR{2} = [stats_data{1};stats_data{2}];
+    else
+    plot_data_SRvsOR{1} = plot_data{3};
+    plot_data_SRvsOR{2} = [plot_data{1};plot_data{2}];
+    stats_data_SRvsOR{1} = stats_data{3};
+    stats_data_SRvsOR{2} = [stats_data{1};stats_data{2}];
+    end
 else
 end
 conditions = {'own_race','other_race'}; column = 'condNames9';
