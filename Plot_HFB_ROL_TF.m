@@ -224,7 +224,24 @@ data_white_ROL_onset = HFB_behav_stats.ROL_onsets(idx_clean&idx_ROL_nan&idx_whit
 [data_white_ROL_onset_s,white_sort] = sort(data_white_ROL_onset);
 data_white_s = data_white(white_sort,:);
 
-% plot results
+%time-trial-hfb plot of ROL onset asian black and white(without modified Zscore outlier exclusion) 
+HFB_range = dsearchn(data_time',[0 1]');
+
+data_asian = HFB_behav_stats.raw_HFB(idx_clean&idx_ROL_nan&idx_asian,HFB_range(1):HFB_range(2));
+data_black = HFB_behav_stats.raw_HFB(idx_clean&idx_ROL_nan&idx_black,HFB_range(1):HFB_range(2));
+data_white = HFB_behav_stats.raw_HFB(idx_clean&idx_ROL_nan&idx_white,HFB_range(1):HFB_range(2));
+
+data_asian_ROL_onset = HFB_behav_stats.ROL_onsets(idx_clean&idx_ROL_nan&idx_asian,:);
+[data_asian_ROL_onset_s,asian_sort] = sort(data_asian_ROL_onset);
+data_asian_s = data_asian(asian_sort,:);
+data_black_ROL_onset = HFB_behav_stats.ROL_onsets(idx_clean&idx_ROL_nan&idx_black,:);
+[data_black_ROL_onset_s,black_sort] = sort(data_black_ROL_onset);
+data_black_s = data_black(black_sort,:);
+data_white_ROL_onset = HFB_behav_stats.ROL_onsets(idx_clean&idx_ROL_nan&idx_white,:);
+[data_white_ROL_onset_s,white_sort] = sort(data_white_ROL_onset);
+data_white_s = data_white(white_sort,:);
+
+%% plot time trial hfb results
 
 figure('Position', [1500 500 450 600]),clf
 
@@ -233,27 +250,46 @@ contourf(data_time(HFB_range(1):HFB_range(2)),size(data_asian,1):-1:1,data_asian
 set(gca,'clim',[-1 1.5])
 hold on
 plot(data_asian_ROL_onset_s,size(data_asian,1):-1:1,'k--','LineWidth',3)
-title([ 'Time-Trial-HFB plot of ' num2str(anat_name) ' sorted by ROL onset, Asian'])
+% title([ 'Time-Trial-HFB plot of ' num2str(anat_name) ' sorted by ROL onset, Asian'])
+title('Asian')
+set(gca,'fontsize',28)
+ylabel('trials')
+h = colorbar;
+ylabel(h, 'Z-scored power')
 
 subplot(3,1,2)
 contourf(data_time(HFB_range(1):HFB_range(2)),size(data_black,1):-1:1,data_black_s,40,'linecolor','none')
 set(gca,'clim',[-1 1.5])
 hold on
 plot(data_black_ROL_onset_s,size(data_black,1):-1:1,'k--','LineWidth',3)
-title([ 'Time-Trial-HFB plot of ' num2str(anat_name) ' sorted by ROL onset, Black'])
+% title([ 'Time-Trial-HFB plot of ' num2str(anat_name) ' sorted by ROL onset, Black'])
+title('Black')
+set(gca,'fontsize',28)
+ylabel('trials')
+h = colorbar;
+ylabel(h, 'Z-scored power')
 
 subplot(3,1,3)
 contourf(data_time(HFB_range(1):HFB_range(2)),size(data_white,1):-1:1,data_white_s,40,'linecolor','none')
 set(gca,'clim',[-1 1.5])
 hold on
 plot(data_white_ROL_onset_s,size(data_white,1):-1:1,'k--','LineWidth',3)
-title([ 'Time-Trial-HFB plot of ' num2str(anat_name) ' sorted by ROL onset, White'])
+% title([ 'Time-Trial-HFB plot of ' num2str(anat_name) ' sorted by ROL onset, White'])
+title('White')
+set(gca,'fontsize',28)
+ylabel('trials')
+h = colorbar;
+ylabel(h, 'Z-scored power')
+xlabel('Time(S)')
+
 
 data_stats = [data_asian_ROL_onset;data_black_ROL_onset;data_white_ROL_onset];
 data_groups = [ones(length(data_asian_ROL_onset),1);ones(length(data_black_ROL_onset),1)*2;ones(length(data_white_ROL_onset),1)*3];
-[pval,anovatable,stats] = anova1(data_stats,data_groups);
+[pval,anovatable,stats] = anova1(data_stats,data_groups)
 multcompare(stats,'ctype','lsd')% the anova stats of ROL
-
+disp(['asian value ' num2str(mean(data_asian_ROL_onset)*1000) ' ± ' num2str(std(data_asian_ROL_onset)*1000)])
+disp(['black value ' num2str(mean(data_black_ROL_onset)*1000) ' ± ' num2str(std(data_black_ROL_onset)*1000)])
+disp(['white value ' num2str(mean(data_white_ROL_onset)*1000) ' ± ' num2str(std(data_white_ROL_onset)*1000)])
 
 %%
 asian_hfb = HFB_behav_stats.("HFB 0.10~1.00")(idx_clean&idx_ROL_nan&idx_asian&mZ_indx,:);
@@ -335,8 +371,44 @@ g.set_color_options('map',plot_params.col);
 g.draw();
 % set(g(2,1).legend_axe_handle.FontSize,30);
 
-%%
+%% violin plot of ROL
+ROL_onset_column = data_stats;
+% HFB_column = [asian_hfb;black_hfb;white_hfb];
+group_column = data_groups;
 
+group_column_cell = cell(length(group_column),1);
+group_column_cell(group_column==1,1) = deal({'Asian'});
+group_column_cell(group_column==2,1) = deal({'Black'});
+group_column_cell(group_column==3,1) = deal({'White'});
+
+
+% 
+% data_stats = [ROL_OR;ROL_SR];
+% group_OR = cell(length(ROL_OR),1);
+% group_OR(:) = deal({'OR'});
+% group_SR = cell(length(ROL_SR),1);
+% group_SR(:) = deal({' SR'});%add space this data column will come to the first
+% data_groups = vertcat(group_OR,group_SR);
+% clear g
+% 
+% g(1,1)=gramm('x',group_column_cell,'y',ROL_onset_column,'color',group_column_cell,'linestyle','--');
+% g(1,1).stat_violin('fill','transparent');
+% g(1,1).set_title('stat_violin()');
+
+g=gramm('x',group_column_cell,'y',ROL_onset_column,'color',group_column_cell);
+g.set_names('x',[],'y','ROL(S)','color','Origin');
+g.stat_violin('normalization','area','dodge',0,'fill','edge');
+g.stat_boxplot('width',0.2);
+g.set_color_options('map',plot_params.col);
+g.axe_property('FontSize',28)
+
+
+figure('Position',[100 100 600 550]);
+g.draw();
+
+
+
+%%
 load example_data;
 load fisheriris.mat
 

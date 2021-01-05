@@ -246,7 +246,12 @@ set(gca, 'box', 'off')
 %legend off
 % set(gca,'XLabel','Time(S)');%chao
 xlabel('Time(S)') 
+%%
 
+range = dsearchn(data_all.time',[0;1]);
+dataA = mean(plot_data_SRvsOR{1}(:,range(1):range(2)),2)
+dataB = mean(plot_data_SRvsOR{1}(:,range(1):range(2)),2)
+[h,p,ci,stats] = ttest2(dataA,dataB)
 % sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 % sbj_names_num = size(T3,1);
 % title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])

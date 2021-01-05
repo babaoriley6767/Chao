@@ -15,8 +15,12 @@ indxcohort = 1:36;%China
 % indxcohort = [37:44];%Stanfordc
 % indxcohort = [1:44];%2 Centers
 
-sbj_names = sbj_names_all(indxcohort);%China
 
+genderindx = [1 0	0	0	1	0	0	0	1	0	0	0	0	0	0	0	0	0	1	0	0	0	1	1	1	0	0	1	0	0	1	0	0	1	0	1];
+indxcohort = find(genderindx == 1);%this is male
+indxcohort = find(genderindx == 0);%this is female
+
+sbj_names = sbj_names_all(indxcohort);%China
 
 % define the the abbreviations of kinds of brian structures
 anat_all = {'SFG','SFS','MFG','IFS','IFG','OFC','MPG','SMA','VMPFC','ACC','MCC','PCC','STG','STS','MTG','ITS','ITG','AMY','HIPPO A','HIPPO M','HIPPO P'...
@@ -67,7 +71,7 @@ disp(anat_displ);
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
 % [channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');  
-stats = 'group_diff';
+stats = 'any_activation';
 load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
@@ -153,7 +157,7 @@ if strcmp(project_name,'Grad_CPT')
     conditions = {'mtn','city'};column = 'condNames';
     load cdcol.mat
     plot_params.col = [cdcol.carmine;cdcol.ultramarine];
-elseif strcmp(project_name,'race_recall')
+elseif strcmp(project_name,'race_encoding_simple')
 conditions = {'asian','black','white'}; column = 'condNames';
 %     conditions = {'own_race','other_races'};column = 'condNames9';
 %     conditions = {'my_race_ans','not_my_race_ans'};column = 'condNames8';
@@ -362,7 +366,7 @@ set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
 %legend off
 % set(gca,'XLabel','Time(S)');%chao
-xlabel('Time(S)') 
+% xlabel('Time(S)') 
 
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);

@@ -237,6 +237,11 @@ g(1,1).axe_property('FontSize',20)
 figure('Position',[100 100 600 550]);
 g.draw();
 
+[h,p,ci,stats] = ttest2(ROL_SR,ROL_OR)
 
+mean(ROL_SR)
+std(ROL_SR)
+
+405
 
 

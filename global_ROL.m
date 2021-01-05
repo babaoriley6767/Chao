@@ -227,7 +227,7 @@ count_all = sum(cellfun(@numel,T3.anat));%%%% number of total sites in the ROL a
 befInd = round(ROL_params.pre_event * fs);%%% indx numbers before time 0
 aftInd = round(ROL_params.dur * fs);%%%% indx numbers after time 0
 time = (befInd:aftInd)/fs;%% time series
-%% across sites
+%% calculate ROL across sites
 for ei = 1:count_all
     for ci = 1:length(conditions)
         cond = conditions{ci};
@@ -256,7 +256,7 @@ for ei = 1:sum(cellfun(@numel,T3.anat))% ROL main part
     end
     disp(['Computing ROL for sites: ',num2str(ei)])
 end
-%% across all trials
+%% calculate ROL across all trials
 
     for ci = 1:length(conditions)
          stats_data{ci}  = stats_data{ci}(:,stiminds+befInd:stiminds+aftInd);%% define the ROL data length and range
@@ -276,19 +276,13 @@ end
 %%
 %Sites for which a ROL value could not be obtained in 50% of the trials or more were discarded from the analysis.
 % range first 50% second place
-%take care of the time rage
-twin = [0.1 1];%[0.1 1]
-for elec_inspect = 1: length(channame)
-    for ci = 1:length(conditions)
-        ROL.(conditions{ci}).onsets{elec_inspect}(ROL.(conditions{ci}).onsets{elec_inspect} < twin(1) | ROL.(conditions{ci}).onsets{elec_inspect} > twin(2)) = nan;
-    end
-end
 
-%get rid of the sites with too much nan and make a index of nan
+%get rid of the sites with too much nan and make a index of nan?the
+%following is based on each condition
 idx_nan = ones(length(channame),length(conditions));
 for elec_inspect = 1: length(channame)
     for ci = 1:length(conditions)
-        if sum(isnan(ROL.(conditions{ci}).onsets{elec_inspect}))>round(length(ROL.(conditions{ci}).onsets{elec_inspect}))*.6
+        if sum(isnan(ROL.(conditions{ci}).onsets{elec_inspect}))>round(length(ROL.(conditions{ci}).onsets{elec_inspect}))*.5
             idx_nan(elec_inspect,ci) = 0;
         else
         end
@@ -297,6 +291,26 @@ end
 idx_nan = cumprod(idx_nan,2);
 idx_nan = idx_nan(:,end);
 idx_nan = logical(idx_nan)
+
+%get rid of the sites with too much nan and make a index of nan?the
+%following is based on each electrode
+idx_nan = ones(length(channame),1);
+for elec_inspect = 1: length(channame)
+        if sum(isnan([ROL.asian.onsets{elec_inspect} ROL.black.onsets{elec_inspect} ROL.white.onsets{elec_inspect}]))>round(length([ROL.asian.onsets{elec_inspect} ROL.black.onsets{elec_inspect} ROL.white.onsets{elec_inspect}]))*.5
+            idx_nan(elec_inspect) = 0;
+        else
+        end
+end
+idx_nan = logical(idx_nan)
+
+%take care of the time rage that of interest
+twin = [0.1 1];%[0.1 1]
+for elec_inspect = 1: length(channame)
+    for ci = 1:length(conditions)
+        ROL.(conditions{ci}).onsets{elec_inspect}(ROL.(conditions{ci}).onsets{elec_inspect} < twin(1) | ROL.(conditions{ci}).onsets{elec_inspect} > twin(2)) = nan;
+    end
+end
+
 
 %creat little version of ROL and channel names
 for ci = 1:length(conditions)

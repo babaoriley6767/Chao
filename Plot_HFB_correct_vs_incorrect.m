@@ -95,7 +95,11 @@ end
 disp(channame);
 
 %load sheet and vertcat sheet
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/mat_files/group_diff_encoding_HFB_reall_behav_sheet.mat')
+% load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/mat_files/group_diff_encoding_HFB_reall_behav_sheet.mat')
+
+load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/mat_files/group_diff_encoding_HFB_reall_behav_sheet_encode_correct.mat')
+HFB_behav  = HFB_behav_mix;
+
 channame_sheet = cell(length(HFB_behav),1);
 for i = 1:length(HFB_behav)
     channame_sheet{i} = HFB_behav{i}.channame{1};
@@ -137,6 +141,8 @@ data_wave_sm = convn(data_wave,gusWin','same');
 recall_isCorrect = HFB_behav_stats.recall_isCorrect;
 clean_trial = HFB_behav_stats.clean_trial;
 test_race = HFB_behav_stats.test_race;
+% 
+% zs = ~(abs(zscore(HFB_behav_stats.("HFB 0.00~1.00")))>3);
 
 %concatenate  data for conditions
 
