@@ -10,16 +10,17 @@ sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';
     ;'C18_45';'C18_46';'C18_47';'C18_49';'C19_50';'C19_51';'C19_52';'C19_53';'C19_55';'C19_58';'C19_60';'C19_62';'S17_114_EB'...
     ;'S17_116_AA';'S17_118_TW';'S19_145_PC';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT'};
 
+%make a specific selection of cohort
+indxcohort = 1:36;%China
+% indxcohort = [37:44];%Stanfordc
+% indxcohort = [1:44];%2 Centers
 
-sbj_names_all_gradCPT = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';'C18_29';'C18_30'...
-    ;'C18_31';'C18_32';'C18_33';'C18_34';'C18_35';'C18_37';'C18_38';'C18_39';'C18_40';'C18_41';'C18_42';'C18_43';'C18_44'...
-    ;'C18_45';'C18_46';'C18_47';'C18_49';'C19_50';'C19_51';'C19_52';'C19_53';'C19_55';'C19_58';'C19_60';'C19_62'};
 
-indxcohort = ismember(sbj_names_all,sbj_names_all_gradCPT);
+genderindx = [1 0	0	0	1	0	0	0	1	0	0	0	0	0	0	0	0	0	1	0	0	0	1	1	1	0	0	1	0	0	1	0	0	1	0	1];
+indxcohort = find(genderindx == 1);%this is male
+indxcohort = find(genderindx == 0);%this is female
 
 sbj_names = sbj_names_all(indxcohort);%China
-
-
 
 % define the the abbreviations of kinds of brian structures
 anat_all = {'SFG','SFS','MFG','IFS','IFG','OFC','MPG','SMA','VMPFC','ACC','MCC','PCC','STG','STS','MTG','ITS','ITG','AMY','HIPPO A','HIPPO M','HIPPO P'...
@@ -58,7 +59,6 @@ anat = {'SFG','SFS','MFG','IFS','IFG','OFC','MPG','SMA','VMPFC','ACC','MCC','PCC
     'FOP','POP','TOP','PARL','INSULA','BASAL'};anat_name='all available';
 anat = {'WM','OUT','EMPTY','LESION'};;anat_name='exclude';
 
-
 side = 'none';%'L','R','none'
 
 
@@ -70,10 +70,12 @@ disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
+% [channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');  
+stats = 'any_activation';
 load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
-
+channame = [];
 %Creat another table with rows of specific cohorts and column of specific anatomical
 %structures
 sz = [size(sbj_names,1) size(anat,2)];
@@ -81,23 +83,39 @@ varTypes = cell(1,size(anat,2));
 varTypes(:) = {'cell'};
 T2 = table('Size',sz,'VariableTypes',varTypes,'VariableNames',anat,'RowNames',sbj_names);
 %put the glv_index into each space of the table as a vector
-if isempty(side)||strcmp(side,'none')
+if isempty(side)||strcmp(side,'none')   
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
+            if strcmp(stats,'group_diff')
+                idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
+            elseif strcmp(stats,'any_activation')
+                idx2 = T{i}.any_activation;
+            else
+                idx2 = T{i}.all_trials_activation;
+            end
             idx = idx1 & idx2;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
+            channame_in_T = T{i}.sbj_name_channame(idx,:);
+            channame = [channame; channame_in_T];
         end
     end
 else
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
+            if strcmp(stats,'group_diff')
+                idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
+            elseif strcmp(stats,'any_activation')
+                idx2 = T{i}.any_activation;
+            else
+                idx2 = T{i}.all_trials_activation;
+            end%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
             idx3 = strcmp(T{i}.LvsR,side);
             idx = idx1 & idx2 & idx3;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
+            channame_in_T = T{i}.sbj_name_channame(idx,:);
+            channame = [channame; channame_in_T];
         end
     end
 end
@@ -118,27 +136,24 @@ T3 = table('Size',sz,'VariableTypes',varTypes,'VariableNames',{'anat'},'RowNames
 for i = 1:size(T3,1)
     T3{i,:}{:} = horzcat(T2{i,:}{:});
 end
-loc=cellfun('isempty', T3{:,'anat'} );
+loc=cellfun('isempty', T3{:,'anat'} );% 
 T3(loc,:)=[];
-
-
 %% display info of behav data
 behv = readtable(['/Users/chao/Desktop/Project_in_Stanford/01_RACE/4_working_data/Behavioral_accuracy/results_summary.xlsx']);
 behv_indx = ismember(behv.Chao_patient_ID_in_server,T3.Properties.RowNames);
 disp(['the mean of accuracy in ' anat{:} ' is ' num2str(mean(behv.Race_CatAcc_SR(behv_indx))) ' and the std is ' num2str(std(behv.Race_CatAcc_SR(behv_indx)))]);
 %%
 %define the plot and stats parameters first
-project_name ='GradCPT';% 'race_encoding_simple'or'Grad_CPT'  % The might be error here because of the naming some are GradCPT and some are Grad_CPT
+project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT'
 plot_params = genPlotParams(project_name,'timecourse');
 plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
 plot_params.single_trial = false;
-plot_params.clust_per = true;% clusterd based permuation
-plot_params.clust_per_win = [0 1];
+plot_params.clust_per = false;% clusterd based permuation
 %%
 %make a specific selection of conditions and coloring
-if strcmp(project_name,'GradCPT') % The might be error here because of the naming some are GradCPT and some are Grad_CPT
+if strcmp(project_name,'Grad_CPT')
     conditions = {'mtn','city'};column = 'condNames';
     load cdcol.mat
     plot_params.col = [cdcol.carmine;cdcol.ultramarine];
@@ -171,7 +186,7 @@ for i = 1:length(T3.Properties.RowNames)
         dirs = InitializeDirs(project_name, sbj_name, comp_root, server_root, code_root);
         load([dirs.data_root,filesep,'OriginalData',filesep,sbj_name,filesep,'global_',project_name,'_',sbj_name,'_',block_names{1},'.mat'])
         for j = 1:length(T3.anat{i})
-            data_all = concatBlocks(sbj_name, block_names,dirs,T3.anat{i}(j),'HFB','Band',{'wave'},['stimlock']);%'stimlock_bl_corr'
+            data_all = concatBlocks(sbj_name, block_names,dirs,T3.anat{i}(j),'HFB','Band',{'wave'},['stimlock_bl_corr']);%'stimlock_bl_corr'
             
             %smooth is in the trial level
             winSize = floor(data_all.fsample*plot_params.sm);
@@ -267,63 +282,68 @@ if plot_params.clust_per
     indx_per = find(abs(data_all.time-plot_params.clust_per_win(1))<0.001):find(abs(data_all.time-plot_params.clust_per_win(2))<0.001);
     data.time_stac = data_all.time(indx_per);
     
-    data_mtn = stats_data{1}(:,indx_per);
-    data_mtn = permute(data_mtn,[3 2 1]);
-    data_city = stats_data{2}(:,indx_per);
-    data_city = permute(data_city,[3 2 1]);
+    data_asian = stats_data{1}(:,indx_per);
+    data_asian = permute(data_asian,[3 2 1]);
+    data_black = stats_data{2}(:,indx_per);
+    data_black = permute(data_black,[3 2 1]);
+    data_white = stats_data{3}(:,indx_per);
+    data_white = permute(data_white,[3 2 1]);
     rng('default')
     
-    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_mtn, data_city,[]);
+    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_black,[]);
     
     cluster_indx = find(clust_info.pos_clust_pval<0.05);
     cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
     cluster_sig(cluster_sig==0)=NaN;
-    warning(['cluster p value of mtn higher than city are ' num2str(clust_info.pos_clust_pval)])
-    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    warning(['cluster p value of asian higher than black are ' num2str(clust_info.pos_clust_pval)])
+    h(4) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
     
     cluster_indx = find(clust_info.neg_clust_pval<0.05);
     cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
     cluster_sig(cluster_sig==0)=NaN;
-    warning(['cluster p value of mtn lower than city are ' num2str(clust_info.neg_clust_pval)])
-    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    warning(['cluster p value of asian lower than black are ' num2str(clust_info.neg_clust_pval)])
+    h(4) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
     
     
     
-%     [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_white,[]);
-%     
-%     cluster_indx = find(clust_info.pos_clust_pval<0.05);
-%     cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
-%     cluster_sig(cluster_sig==0)=NaN;
-%     warning(['cluster p value of asian higher than white are ' num2str(clust_info.pos_clust_pval)])
-%     h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
-%     
-%     cluster_indx = find(clust_info.neg_clust_pval<0.05);
-%     cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
-%     cluster_sig(cluster_sig==0)=NaN;
-%     warning(['cluster p value of asian lower than white are ' num2str(clust_info.neg_clust_pval)])
-%     h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
-%     
-%     
-%     [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_black, data_white,[]);
-%     
-%     cluster_indx = find(clust_info.pos_clust_pval<0.05);
-%     cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
-%     cluster_sig(cluster_sig==0)=NaN;
-%     warning(['cluster p value of black higher than white are ' num2str(clust_info.pos_clust_pval)])
-%     h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
-%     
-%     cluster_indx = find(clust_info.neg_clust_pval<0.05);
-%     cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
-%     cluster_sig(cluster_sig==0)=NaN;
-%     warning(['cluster p value of ablack lower than white are ' num2str(clust_info.neg_clust_pval)])
-%     h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
-%     
-%     
-%     
+    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_asian, data_white,[]);
+    
+    cluster_indx = find(clust_info.pos_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of asian higher than white are ' num2str(clust_info.pos_clust_pval)])
+    h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+    
+    cluster_indx = find(clust_info.neg_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of asian lower than white are ' num2str(clust_info.neg_clust_pval)])
+    h(5) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.1, '-^','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+    
+    
+    [pval, t_orig, clust_info, seed_state, est_alpha] = clust_perm2(data_black, data_white,[]);
+    
+    cluster_indx = find(clust_info.pos_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of black higher than white are ' num2str(clust_info.pos_clust_pval)])
+    h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+    
+    cluster_indx = find(clust_info.neg_clust_pval<0.05);
+    cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
+    cluster_sig(cluster_sig==0)=NaN;
+    warning(['cluster p value of ablack lower than white are ' num2str(clust_info.neg_clust_pval)])
+    h(6) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.15, '-o','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerFaceColor',cdcol.chinese_white,'MarkerSize',14);
+    
+    
+    
     cond_names_stac = cond_names;
-    cond_names_stac{1,1} = 'mtn';
-    cond_names_stac{1,2} = 'city';
-    cond_names_stac{1,3} = 'mtn vs city';
+    cond_names_stac{1,1} = 'asian';
+    cond_names_stac{1,2} = 'black';
+    cond_names_stac{1,3} = 'white';
+    cond_names_stac{1,4} = 'asian vs black';
+    cond_names_stac{1,5} = 'asian vs white';
+    cond_names_stac{1,6} = 'black vs white';
 else
 end
 
@@ -340,18 +360,66 @@ plot([0 0],y_lim, 'Color', [0 0 0], 'LineWidth',2)
 plot(xlim,[0 0], 'Color', [.5 .5 .5], 'LineWidth',1)
 ylim(y_lim)
 box on 
-leg = legend(h,cond_names_stac,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
+leg = legend(h,cond_names,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
 legend boxoff
 set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
 %legend off
 % set(gca,'XLabel','Time(S)');%chao
-xlabel('Time(S)') 
+% xlabel('Time(S)') 
 
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
 title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+%% anova and post hoc
 
+data_asian = mean(stats_data{1}(:,indx_per),2);
+data_black = mean(stats_data{2}(:,indx_per),2);
+data_white = mean(stats_data{3}(:,indx_per),2);
+data_anova = [data_asian;data_black;data_white];
+group_asian = repmat({'asian'},size(data_asian,1),1);
+group_black = repmat({'black'},size(data_black,1),1);
+group_white = repmat({'white'},size(data_white,1),1);
+group = [group_asian;group_black;group_white];
+%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+[p1,tbl1,stats1] = anova1(data_anova,group);
+std1 = [std(data_asian),std(data_black ),std(data_white)];
+m1 = multcompare(stats1,'ctype','tukey-kramer')
+% m1 = multcompare(stats1,'ctype','bonferroni')
+% m1 = multcompare(stats1,'ctype','lsd')
+%% stats
+load('cdcol.mat')
+figureDim = [100 100 .23 .35 ];
+figure('units', 'normalized', 'outerposition', figureDim)
+for ci = 1:length(conditions)
+       plot_params.single_trial
+            subplot(3,1,ci)
+            plot(data_all.time,plot_data_trials{ci}', 'Color',plot_params.col(ci,:))
+            hold on
+            y_lim = [-1,10];
+            xlim(plot_params.xlim)
+            ylim(y_lim)
+      
+end
+%% stats
+[H,P,CI,STATS] = ttest2(stats_data{1},stats_data{2}); STATS.H = H; STATS.P = P; STATS.CI = CI;
+
+%% plot the distribution of sites among cases
+figureDim = [100 100 .23 .35 ];
+figure('units', 'normalized', 'outerposition', figureDim)
+%x = 1:sbj_names_num;
+x = cell(1,size(T3,1));
+for i = 1:size(T3,1)
+    x{i} = T3.Row{i};
+end
+x=categorical(x);
+y = cellfun(@numel, T3{:,'anat'} );
+barh(x,y)
+set(gca,'fontsize',plot_params.textsize)
+sbj_names_num = size(T3,1);
+title(['distribution of sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+set(gca,'XTick',[0:max(y)]);
+%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
 %% plot the sites in MNI space 
 %This part can work but the figure is not pretty, I'm still working on this part, if you know some way that we could plot a nicer brain
 %plz tell me know, chao
@@ -382,8 +450,8 @@ if isempty(side)||strcmp(side,'none')
             idx1 = strcmp(T{i}.label,anat{j});
             idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
             idx = idx1 & idx2;
-            coords_in_T = [T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3];
-%             coords_in_T = [T{i}.fsaverageINF_coord_1 T{i}.fsaverageINF_coord_2 T{i}.fsaverageINF_coord_3];
+%             coords_in_T = [T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3];
+            coords_in_T = [T{i}.IELVis_coord_1 T{i}.IELVis_coord_2 T{i}.IELVis_coord_3];
             coords_in_T = coords_in_T(idx,:);
             LvsR_in_T = T{i}.LvsR(idx,:);
             channame_in_T = T{i}.sbj_name_channame(idx,:);
@@ -470,8 +538,8 @@ end
 cfg=[];
 cfg.view='r';
 cfg.elecSize=12;
-cfg.surfType='inflated';    
-cfg.opaqueness=1;
+cfg.surfType='pial';    
+cfg.opaqueness=0.1;
 cfg.ignoreDepthElec='n';
 cfg.elecCoord=[coords.MNI_coord coords.isleft];
 cfg.elecNames=coords.channame;
@@ -480,6 +548,23 @@ cfg.elecColorScale=[0 1];
 cfg.title = [];
 cfg.backgroundColor = [1,1,1];
 cfgOut=plotPialSurf_v2('fsaverage',cfg);
+
+
+
+
+%% Check whether the left and right coordinates are correct in the the subjvar 
+output_channames = cfg.elecNames;
+output_loc = cfg.elecCoord;
+range = dsearchn(data_all.time',[0;1]);
+data_asian = mean(stats_data{1}(:,range(1):range(2)),2);
+data_black = mean(stats_data{2}(:,range(1):range(2)),2);
+data_white = mean(stats_data{3}(:,range(1):range(2)),2);
+output_AvsB = data_asian - data_balck;
+output_AvsW = data_asian - data_white;
+output_BvsW = data_black - data_white;
+save('baotian.mat','output_AvsB','output_AvsW','output_BvsW','output_channames','output_loc');
+
+
 
 
 

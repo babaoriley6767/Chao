@@ -79,7 +79,7 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
+            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
             idx = idx1 & idx2;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
             channame_in_T = T{i}.sbj_name_channame(idx,:);

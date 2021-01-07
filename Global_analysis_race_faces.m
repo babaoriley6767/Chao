@@ -73,7 +73,7 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
+            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
             idx = idx1 & idx2;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
         end
@@ -363,8 +363,8 @@ set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
-title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
-
+% title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+disp([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
 
 
 %% stats paired permutation

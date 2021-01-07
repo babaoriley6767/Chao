@@ -146,7 +146,7 @@ plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
 plot_params.single_trial = false;
-plot_params.clust_per = true;% clusterd based permuation
+plot_params.clust_per = false;% clusterd based permuation
 %%
 %make a specific selection of conditions and coloring
 
@@ -348,7 +348,7 @@ plot([0 0],y_lim, 'Color', [0 0 0], 'LineWidth',2)
 plot(xlim,[0 0], 'Color', [.5 .5 .5], 'LineWidth',1)
 ylim(y_lim)
 box on 
-leg = legend(h,cond_names_stac,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
+leg = legend(h,cond_names,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
 legend boxoff
 set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
@@ -358,7 +358,8 @@ set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
-title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+% title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+disp([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
 %% anova and post hoc
 
 data_asian = mean(stats_data{1}(:,indx_per),2);

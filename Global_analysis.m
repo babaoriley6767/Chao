@@ -150,7 +150,7 @@ plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
 plot_params.single_trial = false;
-plot_params.clust_per = false;% clusterd based permuation
+plot_params.clust_per = true;% clusterd based permuation
 %%
 %make a specific selection of conditions and coloring
 if strcmp(project_name,'Grad_CPT')
@@ -370,7 +370,8 @@ set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
-title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+% title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+disp([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
 %% anova and post hoc
 
 data_asian = mean(stats_data{1}(:,indx_per),2);
@@ -448,9 +449,9 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
+            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
             idx = idx1 & idx2;
-            coords_in_T = [T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3];
+            coords_in_T = [T{i}.IELVis_coord_1 T{i}.IELVis_coord_2 T{i}.IELVis_coord_3];
 %             coords_in_T = [T{i}.fsaverageINF_coord_1 T{i}.fsaverageINF_coord_2 T{i}.fsaverageINF_coord_3];
             coords_in_T = coords_in_T(idx,:);
             LvsR_in_T = T{i}.LvsR(idx,:);
