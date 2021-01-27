@@ -1,4 +1,4 @@
-clear%
+clear% %
 addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_personal-master/'))
 addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_preproc-master/'))
 [server_root, comp_root, code_root] = AddPaths('Chao_iMAC');%home
