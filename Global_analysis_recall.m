@@ -352,7 +352,7 @@ leg = legend(h,cond_names,'Location','Northeast', 'AutoUpdate','off');%cond_name
 legend boxoff
 set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
-%legend off
+legend off
 % set(gca,'XLabel','Time(S)');%chao
 % xlabel('Time(S)') 
 

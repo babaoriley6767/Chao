@@ -146,6 +146,7 @@ disp(['the mean of accuracy in ' anat{:} ' is ' num2str(mean(behv.Race_CatAcc_SR
 %define the plot and stats parameters first
 project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT'
 plot_params = genPlotParams(project_name,'timecourse');
+plot_params.legend = false
 plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
@@ -364,7 +365,7 @@ leg = legend(h,cond_names,'Location','Northeast', 'AutoUpdate','off');%cond_name
 legend boxoff
 set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
-%legend off
+legend off
 % set(gca,'XLabel','Time(S)');%chao
 % xlabel('Time(S)') 
 
