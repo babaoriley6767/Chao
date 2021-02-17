@@ -1,5 +1,5 @@
 function [channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,stats,side)
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
 channame = [];

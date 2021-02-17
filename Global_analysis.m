@@ -1,6 +1,6 @@
 %get ready with the addpath,plz adjust accordingly
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_personal-master/'))
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_preproc-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_personal-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_preproc-master/'))
 %addpath(genpath('/Users/chao/Desktop/function_tools/gramm-master'))% this is a matlab based graph toolbox which is similar to the ggplot2
 [server_root, comp_root, code_root] = AddPaths('Chao_iMAC');%home
 
@@ -65,14 +65,14 @@ side = 'none';%'L','R','none'
 
 anat = {'STS'};anat_name='STS';
 % Check on the meaning of the abbreviations
-anat_displ =  importdata('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/anat_abbreviation.txt');%pls select a directory to store the 
+anat_displ =  importdata('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/anat_abbreviation.txt');%pls select a directory to store the 
 disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
 % [channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');  
 stats = 'any_activation';
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
 channame = [];
@@ -139,7 +139,7 @@ end
 loc=cellfun('isempty', T3{:,'anat'} );% 
 T3(loc,:)=[];
 %% display info of behav data
-behv = readtable(['/Users/chao/Desktop/Project_in_Stanford/01_RACE/4_working_data/Behavioral_accuracy/results_summary.xlsx']);
+behv = readtable(['/Users/tony/Desktop/Project_in_Stanford/01_RACE/4_working_data/Behavioral_accuracy/results_summary.xlsx']);
 behv_indx = ismember(behv.Chao_patient_ID_in_server,T3.Properties.RowNames);
 disp(['the mean of accuracy in ' anat{:} ' is ' num2str(mean(behv.Race_CatAcc_SR(behv_indx))) ' and the std is ' num2str(std(behv.Race_CatAcc_SR(behv_indx)))]);
 %%
@@ -234,7 +234,7 @@ end
 %% plot figure based on aboving data
 clear h
 load('cdcol.mat')
-figureDim = [100 100 .23 .35 ];
+figureDim = [100 100 .5 .7 ];% defalt[100 100 .23 .35]
 figure('units', 'normalized', 'outerposition', figureDim)
 for ci = 1:length(conditions)
     lineprops.col{1} = plot_params.col(ci,:);
@@ -407,7 +407,7 @@ end
 [H,P,CI,STATS] = ttest2(stats_data{1},stats_data{2}); STATS.H = H; STATS.P = P; STATS.CI = CI;
 
 %% plot the distribution of sites among cases
-figureDim = [100 100 .23 .35 ];
+figureDim = [100 100 .46 .70 ];
 figure('units', 'normalized', 'outerposition', figureDim)
 %x = 1:sbj_names_num;
 x = cell(1,size(T3,1));
