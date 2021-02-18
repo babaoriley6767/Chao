@@ -95,7 +95,7 @@ end
 disp(channame);
 
 %load sheet and vertcat sheet
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/mat_files/group_diff_encoding_HFB_reall_behav_sheet.mat')
+load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/mat_files/group_diff_encoding_HFB_reall_behav_sheet.mat')
 channame_sheet = cell(length(HFB_behav),1);
 for i = 1:length(HFB_behav)
     channame_sheet{i} = HFB_behav{i}.channame{1};
@@ -688,3 +688,5 @@ switch anat_name
         end
 end
 disp(channame);
+%%
+
