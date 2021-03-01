@@ -114,7 +114,7 @@ data_white_ROL_onset{ai} = HFB_behav_stats.ROL_onsets(idx_clean&idx_ROL_nan&idx_
 end
 
 
-
+%%distribution of ROL in different region* condition
 figure('Position', [0 0 1100 300])
 
 subplot(1,3,1)
@@ -149,6 +149,49 @@ set(gca,'fontsize',28)
 
 
 
+
+data_insula= [data_asian_ROL_onset{1}];
+data_vlPFC = [data_asian_ROL_onset{2}];
+data_vdPFC = [data_asian_ROL_onset{3};];
+data_anova = [data_insula;data_vlPFC;data_vdPFC]';
+group_insula = repmat({'insula'},size(data_insula,1),1);
+group_vlPFC = repmat({'vlPFC'},size(data_vlPFC,1),1);
+group_vdPFC = repmat({'vdPFC'},size(data_vdPFC,1),1);
+group = [group_insula;group_vlPFC;group_vdPFC];
+%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+[p1,tbl1,stats1] = anova1(data_anova,group);
+std1 = [nanstd(data_insula),nanstd(data_vlPFC),nanstd(data_vdPFC)];
+m1 = multcompare(stats1,'ctype','lsd')
+
+data_insula= [data_black_ROL_onset{1}];
+data_vlPFC = [data_black_ROL_onset{2}];
+data_vdPFC = [data_black_ROL_onset{3}];
+data_anova = [data_insula;data_vlPFC;data_vdPFC]';
+group_insula = repmat({'insula'},size(data_insula,1),1);
+group_vlPFC = repmat({'vlPFC'},size(data_vlPFC,1),1);
+group_vdPFC = repmat({'vdPFC'},size(data_vdPFC,1),1);
+group = [group_insula;group_vlPFC;group_vdPFC];
+%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+[p1,tbl1,stats1] = anova1(data_anova,group);
+std1 = [nanstd(data_insula),nanstd(data_vlPFC),nanstd(data_vdPFC)];
+m1 = multcompare(stats1,'ctype','lsd')
+
+data_insula= [data_white_ROL_onset{1}];
+data_vlPFC = [data_white_ROL_onset{2}];
+data_vdPFC = [data_white_ROL_onset{3}];
+data_anova = [data_insula;data_vlPFC;data_vdPFC]';
+group_insula = repmat({'insula'},size(data_insula,1),1);
+group_vlPFC = repmat({'vlPFC'},size(data_vlPFC,1),1);
+group_vdPFC = repmat({'vdPFC'},size(data_vdPFC,1),1);
+group = [group_insula;group_vlPFC;group_vdPFC];
+%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+[p1,tbl1,stats1] = anova1(data_anova,group);
+std1 = [nanstd(data_insula),nanstd(data_vlPFC),nanstd(data_vdPFC)];
+m1 = multcompare(stats1,'ctype','lsd')
+
+
+
+%%distribution of ROL in different region* all conditions
 values = cell(1,length(anat_all));
 edges = cell(1,length(anat_all));
 centers = cell(1,length(anat_all));
@@ -181,6 +224,22 @@ leg = legend(c,anat_name_all,'Location','Northeast', 'AutoUpdate','off');%cond_n
 legend boxoff
 set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 title('all conditions')
+
+
+data_insula= [data_asian_ROL_onset{1};data_black_ROL_onset{1};data_white_ROL_onset{1}];
+data_vlPFC = [data_asian_ROL_onset{2};data_black_ROL_onset{2};data_white_ROL_onset{2}];
+data_vdPFC = [data_asian_ROL_onset{3};data_black_ROL_onset{3};data_white_ROL_onset{3}];
+data_anova = [data_insula;data_vlPFC;data_vdPFC]';
+group_insula = repmat({'insula'},size(data_insula,1),1);
+group_vlPFC = repmat({'vlPFC'},size(data_vlPFC,1),1);
+group_vdPFC = repmat({'vdPFC'},size(data_vdPFC,1),1);
+group = [group_insula;group_vlPFC;group_vdPFC];
+%cd('/Users/chao/Desktop/Project_in_Stanford/RACE/4_working_data/globe_analysis_figures');%plz adjust accordingly
+[p1,tbl1,stats1] = anova1(data_anova,group);
+std1 = [nanstd(data_insula),nanstd(data_vlPFC),nanstd(data_vdPFC)];
+m1 = multcompare(stats1,'ctype','lsd')
+
+
 
 
 figure('Position', [0 0 700 300])

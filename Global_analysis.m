@@ -71,7 +71,7 @@ disp(anat_displ);
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
 % [channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');  
-stats = 'any_activation';
+stats = 'group_diff';
 load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
@@ -140,7 +140,8 @@ loc=cellfun('isempty', T3{:,'anat'} );%
 T3(loc,:)=[];
 %% display info of behav data
 behv = readtable(['/Users/tony/Desktop/Project_in_Stanford/01_RACE/4_working_data/Behavioral_accuracy/results_summary.xlsx']);
-behv_indx = ismember(behv.Chao_patient_ID_in_server,T3.Properties.RowNames);
+subj_Behv_trim=T3.Properties.RowNames(~strcmp(T3.Properties.RowNames,'C18_30'));
+behv_indx = ismember(behv.Chao_patient_ID_in_server,subj_Behv_trim);
 disp(['the mean of accuracy in ' anat{:} ' is ' num2str(mean(behv.Race_CatAcc_SR(behv_indx))) ' and the std is ' num2str(std(behv.Race_CatAcc_SR(behv_indx)))]);
 %%
 %define the plot and stats parameters first
