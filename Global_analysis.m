@@ -28,6 +28,7 @@ anat_all = {'SFG','SFS','MFG','IFS','IFG','OFC','MPG','SMA','VMPFC','ACC','MCC',
     'FOP','POP','TOP','EMPTY','PARL','LESION','INSULA','BASAL'};
 
 %make a specific selection of anatomical structures
+anat = {'HIPPO A','HIPPO M','HIPPO P','PHG','AMY'};anat_name = 'MTLE';
 anat = {'HIPPO A','HIPPO M','HIPPO P','PHG'};anat_name = 'MTLE';
 anat = {'HIPPO A'};anat_name = 'HIPPO A';
 anat = {'HIPPO M'};anat_name = 'HIPPO M';
@@ -71,7 +72,7 @@ disp(anat_displ);
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
 % [channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');  
-stats = 'group_diff';
+stats = 'any_activation';
 load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);

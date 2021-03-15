@@ -32,7 +32,7 @@ inclusion = 'any_activation';
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+load('/Users/Tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
 %Creat another table with rows of specific cohorts and column of specific anatomical
@@ -383,7 +383,7 @@ elseif strcmp(inclusion,'any_activation')
             idx1 = strcmp(T{i}.label,anat{j});
             idx2 = T{i}.any_activation;
             idx = idx1 & idx2;
-            coords_in_T = [T{i}.IELVis_coord_1 T{i}.IELVis_coord_2 T{i}.IELVis_coord_3];%[T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3]
+            coords_in_T = [T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3];%[T{i}.MNI_coord_1 T{i}.MNI_coord_2 T{i}.MNI_coord_3]&[T{i}.IELVis_coord_1 T{i}.IELVis_coord_2 T{i}.IELVis_coord_3]
             coords_in_T = coords_in_T(idx,:);
             LvsR_in_T = T{i}.LvsR(idx,:);
             channame_in_T = T{i}.sbj_name_channame(idx,:);
