@@ -1,7 +1,7 @@
 
 %get ready with the addpath,plz adjust accordingly
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_personal-master/'))
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_preproc-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_personal-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_preproc-master/'))
 %addpath(genpath('/Users/chao/Desktop/function_tools/gramm-master'))% this is a matlab based graph toolbox which is similar to the ggplot2
 [server_root, comp_root, code_root] = AddPaths('Chao_iMAC');%home
 
@@ -64,7 +64,7 @@ disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
 channame = [];
@@ -79,7 +79,7 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
+            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
             idx = idx1 & idx2;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
             channame_in_T = T{i}.sbj_name_channame(idx,:);

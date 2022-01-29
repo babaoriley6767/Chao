@@ -70,7 +70,7 @@ disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
 
@@ -85,7 +85,7 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
+            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff %default
             idx = idx1 & idx2;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
         end
@@ -94,7 +94,7 @@ else
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
+            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation
             idx3 = strcmp(T{i}.LvsR,side);
             idx = idx1 & idx2 & idx3;
             T2{sbj_names{i},anat{j}} = {T{i}.glv_index(idx)'};
@@ -136,6 +136,9 @@ stats_params = genStatsParams(project_name);
 plot_params.single_trial = false;
 plot_params.clust_per = true;% clusterd based permuation
 plot_params.clust_per_win = [0 1];
+
+
+plot_params.legend = false;
 %%
 %make a specific selection of conditions and coloring
 if strcmp(project_name,'GradCPT') % The might be error here because of the naming some are GradCPT and some are Grad_CPT
@@ -158,6 +161,7 @@ plot_data_trials = cell(1,length(conditions));
 plot_data_trials_all = cell(1,length(conditions));
 stats_data = cell(1,length(conditions));
 stats_data_all = cell(1,length(conditions));
+%% 
 for i = 1:length(T3.Properties.RowNames)
     if ~isempty(T3.anat{i})
         indx = i;
@@ -195,14 +199,14 @@ for i = 1:length(T3.Properties.RowNames)
 
                 for ci = 1:length(conditions)
                     grouped_trials{ci} = setdiff(grouped_trials{ci},thr_raw);% make the grouped_trial and thr_raw in together
-                    plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials{ci},:),1)];% we use smoothed data for plotting
-                    plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all{ci},:),1)];
-                    stats_data{ci} = [stats_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
-                    stats_data_all{ci} = [stats_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];                   
-%                     plot_data{ci}  = [plot_data{ci};data_all.wave_sm(grouped_trials{ci},:)];% averaged across all trials
-%                     plot_data_all{ci} = [plot_data_all{ci};data_all.wave_sm(grouped_trials_all{ci},:)];
-%                     stats_data{ci} = [stats_data{ci};data_all.wave(grouped_trials{ci},:)]; % this part of data were prepared for further comparison (original non-smoothed data)
-%                     stats_data_all{ci} = [stats_data_all{ci};data_all.wave(grouped_trials_all{ci},:)];
+%                     plot_data{ci} = [plot_data{ci};nanmean(data_all.wave_sm(grouped_trials{ci},:),1)];% we use smoothed data for plotting
+%                     plot_data_all{ci} = [plot_data_all{ci};nanmean(data_all.wave_sm(grouped_trials_all{ci},:),1)];
+%                     stats_data{ci} = [stats_data{ci};nanmean(data_all.wave(grouped_trials{ci},:),1)]; % this part of data were prepared for further comparison (original non-smoothed data)
+%                     stats_data_all{ci} = [stats_data_all{ci};nanmean(data_all.wave(grouped_trials_all{ci},:),1)];                   
+                    plot_data{ci}  = [plot_data{ci};data_all.wave_sm(grouped_trials{ci},:)];% averaged across all trials  plot_data{ci}  = [plot_data{ci};data_all.wave_sm(grouped_trials{ci},:)]
+                    plot_data_all{ci} = [plot_data_all{ci};data_all.wave_sm(grouped_trials_all{ci},:)];
+                    stats_data{ci} = [stats_data{ci};data_all.wave(grouped_trials{ci},:)]; % this part of data were prepared for further comparison (original non-smoothed data)
+                    stats_data_all{ci} = [stats_data_all{ci};data_all.wave(grouped_trials_all{ci},:)];
                 end
         end
     else
@@ -218,7 +222,7 @@ end
 %% plot figure based on aboving data
 clear h
 load('cdcol.mat')
-figureDim = [100 100 .23 .35 ];
+figureDim = [1 1 .5 .63];%default [0 0 .36 .48] [0 0 .3 .4][100 100 0.5 0.7]this is for mac [0 0 .5 .63]this is for mac book
 figure('units', 'normalized', 'outerposition', figureDim)
 for ci = 1:length(conditions)
     lineprops.col{1} = plot_params.col(ci,:);
@@ -279,13 +283,13 @@ if plot_params.clust_per
     cluster_sig = ismember(clust_info.pos_clust_ids,cluster_indx)*1;
     cluster_sig(cluster_sig==0)=NaN;
     warning(['cluster p value of mtn higher than city are ' num2str(clust_info.pos_clust_pval)])
-    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',4,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',20);
     
     cluster_indx = find(clust_info.neg_clust_pval<0.05);
     cluster_sig = ismember(clust_info.neg_clust_ids,cluster_indx)*1;
     cluster_sig(cluster_sig==0)=NaN;
     warning(['cluster p value of mtn lower than city are ' num2str(clust_info.neg_clust_pval)])
-    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',2,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',14);
+    h(3) = plot(data.time_stac, cluster_sig.*ylim_stac(2)-0.05, '-*','Color',cdcol.black,'LineWidth',4,'MarkerIndices',1:35:length(data.time_stac),'MarkerSize',20);
     
     
     
@@ -340,9 +344,15 @@ plot([0 0],y_lim, 'Color', [0 0 0], 'LineWidth',2)
 plot(xlim,[0 0], 'Color', [.5 .5 .5], 'LineWidth',1)
 ylim(y_lim)
 box on 
+
+if plot_params.legend    
 leg = legend(h,cond_names_stac,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
 legend boxoff
 set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
+else
+end
+
+
 
 %legend off
 % set(gca,'XLabel','Time(S)');%chao
@@ -350,7 +360,7 @@ xlabel('Time(S)')
 
 sites_num = sum(cellfun(@numel, T3{:,'anat'} ));
 sbj_names_num = size(T3,1);
-title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
+%title([num2str(sites_num),' sites in ' anat_name ' from ',num2str(sbj_names_num),' Subjects'])
 
 %% plot the sites in MNI space 
 %This part can work but the figure is not pretty, I'm still working on this part, if you know some way that we could plot a nicer brain

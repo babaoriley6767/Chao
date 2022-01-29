@@ -55,7 +55,7 @@ disp(anat_displ);
 
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
 channame = [];
@@ -115,9 +115,11 @@ project_name ='VTCLoc';% 'race_encoding_simple'or'Grad_CPT'or'VTCLoc'
 plot_params = genPlotParams(project_name,'timecourse');
 plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ... 
-plot_params.clust_per = false;
+plot_params.clust_per = true;
 plot_params.col = [0.8200 0 0.1800;0 0.1608 0.2353];
 stats_params = genStatsParams(project_name);
+
+plot_params.legend = false;
 %%
 %make a specific selection of conditions and coloring
 if strcmp(project_name,'Grad_CPT')
@@ -227,7 +229,7 @@ end
 %% plot figure based on aboving data
 clear h
 load('cdcol.mat')
-figureDim = [100 100 .23 .35 ];
+figureDim = [100 100 .3 .4 ];%[100 100 .23 .35 ];
 figure('units', 'normalized', 'outerposition', figureDim)
 for ci = 1:length(conditions_2)
     lineprops.col{1} = plot_params.col(ci,:);
@@ -346,10 +348,11 @@ end
 plot([0 0],y_lim, 'Color', [0 0 0], 'LineWidth',2)
 plot(xlim,[0 0], 'Color', [.5 .5 .5], 'LineWidth',1)
 ylim(y_lim)
+xlim([-.25 1])
 box on 
-leg = legend(h,cond_names_stac,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
-legend boxoff
-set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
+% leg = legend(h,cond_names_stac,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
+% legend boxoff
+% set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
 % legend off
 

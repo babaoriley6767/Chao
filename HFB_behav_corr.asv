@@ -469,11 +469,12 @@ idxasian = encode_correct & race_asian&ROL_indx;
 idxblack = encode_correct & race_black&ROL_indx;
 idxwhite = encode_correct & race_white&ROL_indx;
 
+for i = 1: length(30:35)% 2022,1,25
 data_corr_1 = cell(length(30:35),3);
 data_corr_2 = cell(length(30:35),3);
 rho = cell(length(30:35),3);
 pval = cell(length(30:35),3);
-for i = 1: length(30:35) % 2022 JNS
+
 data_corr_1{i,1} = HFB_behav_stats{:,i+29}(idxasian,:);
 data_corr_2{i,1} = HFB_behav_stats.recall_RT(idxasian,:);
 [rho{i,1},pval{i,1}] = corr(data_corr_1{i,1},data_corr_2{i,1},'type','p');
@@ -500,23 +501,22 @@ idxasian = encode_correct & race_asian;
 idxblack = encode_correct & race_black;
 idxwhite = encode_correct & race_white;
 
-data_corr_1 = cell(length(30:35),3);
-data_corr_2 = cell(length(30:35),3);
-rho = cell(length(30:35),3);
-pval = cell(length(30:35),3);
-for i = 1: length(30:35) % 2022 JNS
-data_corr_1{i,1} = HFB_behav_stats{:,i+29}(idxasian,:);
-data_corr_2{i,1} = HFB_behav_stats.certainty(idxasian,:);
-[rho{i,1},pval{i,1}] = corr(data_corr_1{i,1},data_corr_2{i,1},'type','p');
+data_corr_1 = cell(1,3);
+data_corr_2 = cell(1,3);
+rho = cell(1,3);
+pval = cell(1,3);
 
-data_corr_1{i,2} = HFB_behav_stats{:,i+29}(idxblack,:);
-data_corr_2{i,2} = HFB_behav_stats.certainty(idxblack,:);
-[rho{i,2},pval{i,2}] = corr(data_corr_1{i,2},data_corr_2{i,2},'type','p');
+data_corr_1{1,1} = HFB_behav_stats{:,35}(idxasian,:);
+data_corr_2{1,1} = HFB_behav_stats.certainty(idxasian,:);
+[rho{1},pval{1}] = corr(data_corr_1{1,1},data_corr_2{1,1},'type','p');
 
-data_corr_1{i,3} = HFB_behav_stats{:,i+29}(idxwhite,:);
-data_corr_2{i,3} = HFB_behav_stats.certainty(idxwhite,:);
-[rho{i,3},pval{i,3}] = corr(data_corr_1{i,3},data_corr_2{i,3},'type','p');
-end
+data_corr_1{1,2} = HFB_behav_stats{:,35}(idxblack,:);
+data_corr_2{1,2} = HFB_behav_stats.certainty(idxblack,:);
+[rho{2},pval{2}] = corr(data_corr_1{1,2},data_corr_2{1,2},'type','p');
+
+data_corr_1{1,3} = HFB_behav_stats{:,35}(idxwhite,:);
+data_corr_2{1,3} = HFB_behav_stats.certainty(idxwhite,:);
+[rho{3},pval{3}] = corr(data_corr_1{1,2},data_corr_2{1,2},'type','p');
 
 figure(1),clf
 for fi = 1:3

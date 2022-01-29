@@ -13,7 +13,7 @@ sbj_names_all = {'C17_20';'C17_21';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';
 %make a specific selection of cohort
 indxcohort = 1:36;%China
 % indxcohort = [37:44];%Stanfordc
-% indxcohort = [1:44];%2 Centers
+indxcohort = [1:44];%2 Centers
 
 
 genderindx = [1 0	0	0	1	0	0	0	1	0	0	0	0	0	0	0	0	0	1	0	0	0	1	1	1	0	0	1	0	0	1	0	0	1	0	1];
@@ -33,7 +33,12 @@ anat = {'HIPPO A','HIPPO M','HIPPO P','PHG'};anat_name = 'MTLE';
 anat = {'HIPPO A'};anat_name = 'HIPPO A';
 anat = {'HIPPO M'};anat_name = 'HIPPO M';
 anat = {'HIPPO P'};anat_name = 'HIPPO P';
+anat = {'HIPPO A','HIPPO M','HIPPO P'};anat_name = 'HIPPO';
+anat = {'HIPPO A','HIPPO M','HIPPO P','PHG'};anat_name = 'HIPPO+PHG';
+anat = {'HIPPO A','HIPPO M','HIPPO P','PHG','AMY'};anat_name = 'HIPPO+PHG+amygdala';
 anat = {'PHG'};anat_name = 'PHG';
+anat = {'EC'};anat_name = 'EC';
+anat = {'TP'};anat_name = 'TP';
 anat = {'INSULA'};anat_name = 'INSULA';
 anat = {'ACC','MCC'};anat_name = 'ACC MCC';
 anat = {'ACC'};anat_name = 'ACC';
@@ -72,7 +77,7 @@ disp(anat_displ);
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
 % [channame,T3] = group_analysis_part1(sbj_names,indxcohort,anat,'group_diff','none');  
-stats = 'any_activation';
+stats = 'group_diff';
 load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
@@ -146,9 +151,9 @@ behv_indx = ismember(behv.Chao_patient_ID_in_server,subj_Behv_trim);
 disp(['the mean of accuracy in ' anat{:} ' is ' num2str(mean(behv.Race_CatAcc_SR(behv_indx))) ' and the std is ' num2str(std(behv.Race_CatAcc_SR(behv_indx)))]);
 %%
 %define the plot and stats parameters first
-project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT'
+project_name ='race_encoding_simple';% 'race_encoding_simple'or'Grad_CPT' 'race_recall'
 plot_params = genPlotParams(project_name,'timecourse');
-plot_params.legend = false
+plot_params.legend = true;
 plot_params.single_trial_replot = true;
 plot_params.single_trial_thr = 15;%the threshold of HFB it could be like 10 15 20 ...
 stats_params = genStatsParams(project_name);
@@ -161,6 +166,8 @@ if strcmp(project_name,'Grad_CPT')
     load cdcol.mat
     plot_params.col = [cdcol.carmine;cdcol.ultramarine];
 elseif strcmp(project_name,'race_encoding_simple')
+conditions = {'asian','black','white'}; column = 'condNames';
+elseif strcmp(project_name,'race_recall')
 conditions = {'asian','black','white'}; column = 'condNames';
 %     conditions = {'own_race','other_races'};column = 'condNames9';
 %     conditions = {'my_race_ans','not_my_race_ans'};column = 'condNames8';
@@ -367,7 +374,7 @@ leg = legend(h,cond_names,'Location','Northeast', 'AutoUpdate','off');%cond_name
 legend boxoff
 set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
-legend off
+% legend off
 % set(gca,'XLabel','Time(S)');%chao
 % xlabel('Time(S)') 
 
@@ -452,7 +459,7 @@ if isempty(side)||strcmp(side,'none')
     for i = 1:length(sbj_names)
         for j = 1:length(anat)
             idx1 = strcmp(T{i}.label,anat{j});
-            idx2 = T{i}.any_activation;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
+            idx2 = T{i}.group_diff;%or idx2 = T{i}.any_activation/T{i}.all_trials_activation/T{i}.group_diff default: any_activation
             idx = idx1 & idx2;
             coords_in_T = [T{i}.IELVis_coord_1 T{i}.IELVis_coord_2 T{i}.IELVis_coord_3];
 %             coords_in_T = [T{i}.fsaverageINF_coord_1 T{i}.fsaverageINF_coord_2 T{i}.fsaverageINF_coord_3];
@@ -518,7 +525,7 @@ cd([fsDir]);
 load('DDS_parc_colors.mat');
 load('cdcol_stanford.mat');
 cdcol.loc_yellow = hex2rgb('#fff301');
-
+cdcol.asian_red  =             [0.9647    0.1647    0]; 
 
 % asian race orange #ff7c01     [1 0.4863 0.0039]
 % Black race purple #612696     [0.3804 0.1490 0.5882]
@@ -536,14 +543,14 @@ for i = 1:size(coords.channame)
 % %     elseif flag(i) == 2
 % %         eleColors(i,:) = [0.9196,0.1412,0.3451]
 %     else
-        eleColors(i,:) =[cdcol.loc_yellow];
+        eleColors(i,:) =[cdcol.asian_red];%cdcol.loc_yellow
 end
 
 cfg=[];
-cfg.view='r';
+cfg.view='rm';
 cfg.elecSize=12;
-cfg.surfType='pial';    
-cfg.opaqueness=0.1;
+cfg.surfType='inflated';    
+cfg.opaqueness=1;
 cfg.ignoreDepthElec='n';
 cfg.elecCoord=[coords.MNI_coord coords.isleft];
 cfg.elecNames=coords.channame;
@@ -554,7 +561,7 @@ cfg.backgroundColor = [1,1,1];
 cfgOut=plotPialSurf_v2('fsaverage',cfg);
 
 
-
+cd /Users/tony/Desktop/Project_in_Stanford/01_RACE/4_working_data/figure_folder/S_Figure_2021_1_MTLE
 
 %% Check whether the left and right coordinates are correct in the the subjvar 
 for i = 1:length(sbj_names_all)

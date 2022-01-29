@@ -3,7 +3,8 @@
         ;'C18_31';'C18_32';'C18_33';'C18_34';'C18_35';'C18_37';'C18_38';'C18_39';'C18_40';'C18_41';'C18_42';'C18_43';'C18_44'...
         ;'C18_45';'C18_46';'C18_47';'C18_49';'C19_50';'C19_51';'C19_52';'C19_53';'C19_55';'C19_58';'C19_60';'C19_62';'S17_114_EB'...
         ;'S17_116_AA';'S17_118_TW';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT';'S19_145_PC'};
-    for i = 1:length(sbj_names)
+%     for i = 1:length(sbj_names)
+i=2;
         cd(['/Volumes/CHAO_IRON_M/data/neuralData/originalData/' sbj_names{i}])
         load(['subjVar_' sbj_names{i} '.mat'])
         elinfo_link = subjVar.elinfo;
@@ -60,6 +61,6 @@
             disp('good to go');
         else
             warning(['please check the subjvar' sbj_names{i}])
-            break;
+%             break;
         end
-    end
+    %end

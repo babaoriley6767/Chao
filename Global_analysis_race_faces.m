@@ -58,7 +58,7 @@ disp(anat_displ);
 
 %% Visit each excel table, add a name column, and concatenate them into a cell
 
-load('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
+load('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/cell_of_44_race_cases_tables.mat');%if there is any change of the excel sheet, 
 %then this need to update,go to 'Creat_cell_of_tables.mat'
 T = T(indxcohort,1);
 channame = [];
@@ -201,7 +201,7 @@ end
 %% plot figure based on aboving data
 clear h
 load('cdcol.mat')
-figureDim = [100 100 .23 .35 ];
+figureDim = [100 100 .3 .4 ];
 figure('units', 'normalized', 'outerposition', figureDim)
 for ci = 1:length(conditions)
     lineprops.col{1} = plot_params.col(ci,:);
@@ -353,9 +353,9 @@ plot([0 0],y_lim, 'Color', [0 0 0], 'LineWidth',2)
 plot(xlim,[0 0], 'Color', [.5 .5 .5], 'LineWidth',1)
 ylim(y_lim)
 box on 
-leg = legend(h,cond_names,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
-legend boxoff
-set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
+% leg = legend(h,cond_names,'Location','Northeast', 'AutoUpdate','off');%cond_names has the trial infomation(default), and cond_names2 is about the category
+% legend boxoff
+% set(leg,'fontsize',plot_params.legendfontsize, 'Interpreter', 'none')
 
 %legend off
 % set(gca,'XLabel','Time(S)');%chao

@@ -1,5 +1,5 @@
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_personal-master/'))
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_preproc-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_personal-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_preproc-master/'))
 %addpath(genpath('/Users/chao/Desktop/function_tools/gramm-master'))% this is a matlab based graph toolbox which is similar to the ggplot2
 [server_root, comp_root, code_root] = AddPaths('Chao_iMAC');%home
 
@@ -63,7 +63,7 @@ site_pick = 'One site  per subj';%One touch per person
 
 anat = {'STS'};anat_name='STS';
 % Check on the meaning of the abbreviations
-anat_displ =  importdata('/Users/chao/Documents/Stanford/code/lbcn_personal-master/Chao/anat_abbreviation.txt');%pls select a directory to store the 
+anat_displ =  importdata('/Users/tony/Documents/Stanford/code/lbcn_personal-master/Chao/anat_abbreviation.txt');%pls select a directory to store the 
 disp(anat_displ);
 
 
@@ -249,7 +249,7 @@ subplot(3,1,1)
 contourf(data_time(HFB_range(1):HFB_range(2)),size(data_asian,1):-1:1,data_asian_s,100,'linecolor','none')
 set(gca,'clim',[-1 1.5])
 hold on
-plot(data_asian_ROL_onset_s,size(data_asian,1):-1:1,'k--','LineWidth',3)
+%plot(data_asian_ROL_onset_s,size(data_asian,1):-1:1,'k--','LineWidth',3)
 % title([ 'Time-Trial-HFB plot of ' num2str(anat_name) ' sorted by ROL onset, Asian'])
 title('Asian')
 set(gca,'fontsize',28)
@@ -261,7 +261,7 @@ subplot(3,1,2)
 contourf(data_time(HFB_range(1):HFB_range(2)),size(data_black,1):-1:1,data_black_s,40,'linecolor','none')
 set(gca,'clim',[-1 1.5])
 hold on
-plot(data_black_ROL_onset_s,size(data_black,1):-1:1,'k--','LineWidth',3)
+%plot(data_black_ROL_onset_s,size(data_black,1):-1:1,'k--','LineWidth',3)
 % title([ 'Time-Trial-HFB plot of ' num2str(anat_name) ' sorted by ROL onset, Black'])
 title('Black')
 set(gca,'fontsize',28)
@@ -273,7 +273,7 @@ subplot(3,1,3)
 contourf(data_time(HFB_range(1):HFB_range(2)),size(data_white,1):-1:1,data_white_s,40,'linecolor','none')
 set(gca,'clim',[-1 1.5])
 hold on
-plot(data_white_ROL_onset_s,size(data_white,1):-1:1,'k--','LineWidth',3)
+%plot(data_white_ROL_onset_s,size(data_white,1):-1:1,'k--','LineWidth',3)
 % title([ 'Time-Trial-HFB plot of ' num2str(anat_name) ' sorted by ROL onset, White'])
 title('White')
 set(gca,'fontsize',28)
@@ -282,14 +282,16 @@ h = colorbar;
 ylabel(h, 'Z-scored power')
 xlabel('Time(S)')
 
+data_white_ROL_onset = sort(data_white_ROL_onset);
+data_white_ROL_onset = data_white_ROL_onset(1:end);
 
 data_stats = [data_asian_ROL_onset;data_black_ROL_onset;data_white_ROL_onset];
 data_groups = [ones(length(data_asian_ROL_onset),1);ones(length(data_black_ROL_onset),1)*2;ones(length(data_white_ROL_onset),1)*3];
 [pval,anovatable,stats] = anova1(data_stats,data_groups)
 multcompare(stats,'ctype','lsd')% the anova stats of ROL
-disp(['asian value ' num2str(mean(data_asian_ROL_onset)*1000) ' ± ' num2str(std(data_asian_ROL_onset)*1000)])
-disp(['black value ' num2str(mean(data_black_ROL_onset)*1000) ' ± ' num2str(std(data_black_ROL_onset)*1000)])
-disp(['white value ' num2str(mean(data_white_ROL_onset)*1000) ' ± ' num2str(std(data_white_ROL_onset)*1000)])
+disp(['asian value ' num2str(mean(data_asian_ROL_onset)*1000) ' +- ' num2str(std(data_asian_ROL_onset)*1000)])
+disp(['black value ' num2str(mean(data_black_ROL_onset)*1000) ' +- ' num2str(std(data_black_ROL_onset)*1000)])
+disp(['white value ' num2str(mean(data_white_ROL_onset)*1000) ' +- ' num2str(std(data_white_ROL_onset)*1000)])
 
 %%
 asian_hfb = HFB_behav_stats.("HFB 0.10~1.00")(idx_clean&idx_ROL_nan&idx_asian&mZ_indx,:);
@@ -406,8 +408,10 @@ g.axe_property('FontSize',28)
 figure('Position',[100 100 600 550]);
 g.draw();
 
-
-
+%%
+median(ROL_onset_column(strcmp(group_column_cell,'Asian')))
+median(ROL_onset_column(strcmp(group_column_cell,'Black')))
+median(ROL_onset_column(strcmp(group_column_cell,'White')))
 %%
 load example_data;
 load fisheriris.mat
