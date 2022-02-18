@@ -1,6 +1,6 @@
 clear
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_personal-master/'))
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_preproc-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_personal-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_preproc-master/'))
 [server_root, comp_root, code_root] = AddPaths('Chao_iMAC');%home
 project_name = 'VTCLoc';
 %% the following part is about index in the excel (activated or not)
@@ -8,7 +8,7 @@ sbj_names = {'C17_20';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';'C18_27';'C18
         ;'C18_31';'C18_32';'C18_33';'C18_34';'C18_35';'C18_37';'C18_38';'C18_39';'C18_40';'C18_41';'C18_42';'C18_43';'C18_44'...
         ;'C18_45';'C18_46';'C18_47';'C18_49';'C19_50';'C19_51';'C19_52';'C19_55';'C19_60';'C19_62';'S17_114_EB'...
         ;'S17_116_AA';'S17_118_TW';'S20_148_SM';'S20_149_DR';'S20_150_CM';'S20_152_HT';'S19_145_PC'};
-    for i = 19:length(sbj_names)
+    for i = 1:length(sbj_names)
         if contains(sbj_names{i},'C17')||contains(sbj_names{i},'C18')||contains(sbj_names{i},'C19')
             center = 'China';
         else
@@ -21,6 +21,7 @@ sbj_names = {'C17_20';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';'C18_27';'C18
         T = readtable([sbj_names{i},'_stats.xlsx']);
         
         stats_params = genStatsParams(project_name);
+        stats_params.task_win = [.15 .5];
         stats_params.paired = true;
         stats_params.all_trials = false;
         conds = {'faces'};
@@ -72,7 +73,7 @@ sbj_names = {'C17_20';'C18_22';'C18_23';'C18_24';'C18_25';'C18_26';'C18_27';'C18
         T.face_selc = face_selc;
         
         
-        writetable(T, [sbj_names{i} '_stats_face.xlsx'] );
+        writetable(T, [sbj_names{i} '_stats_face_150_2_500ms.xlsx'] );
     end
 
 

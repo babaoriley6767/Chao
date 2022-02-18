@@ -1,6 +1,6 @@
 %get ready with the addpath,plz adjust accordingly
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_personal-master/'))
-addpath(genpath('/Users/chao/Documents/Stanford/code/lbcn_preproc-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_personal-master/'))
+addpath(genpath('/Users/tony/Documents/Stanford/code/lbcn_preproc-master/'))
 %addpath(genpath('/Users/chao/Desktop/function_tools/gramm-master'))% this is a matlab based graph toolbox which is similar to the ggplot2
 [server_root, comp_root, code_root] = AddPaths('Chao_iMAC');%home
 

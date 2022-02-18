@@ -287,8 +287,13 @@ data_white_ROL_onset = data_white_ROL_onset(1:end);
 
 data_stats = [data_asian_ROL_onset;data_black_ROL_onset;data_white_ROL_onset];
 data_groups = [ones(length(data_asian_ROL_onset),1);ones(length(data_black_ROL_onset),1)*2;ones(length(data_white_ROL_onset),1)*3];
+
 [pval,anovatable,stats] = anova1(data_stats,data_groups)
 multcompare(stats,'ctype','lsd')% the anova stats of ROL
+
+[pval,anovatable,stats] = kruskalwallis(data_stats,data_groups,'off')
+multcompare(stats,'ctype','lsd')% the anova stats of ROL
+
 disp(['asian value ' num2str(mean(data_asian_ROL_onset)*1000) ' +- ' num2str(std(data_asian_ROL_onset)*1000)])
 disp(['black value ' num2str(mean(data_black_ROL_onset)*1000) ' +- ' num2str(std(data_black_ROL_onset)*1000)])
 disp(['white value ' num2str(mean(data_white_ROL_onset)*1000) ' +- ' num2str(std(data_white_ROL_onset)*1000)])
